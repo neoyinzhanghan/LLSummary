@@ -70,48 +70,46 @@ selected_dates = st.sidebar.slider(
     value=(min_date, max_date)
 )
 
-# Add an "Apply Filters" button
-apply_filters = st.sidebar.button("Apply Filters")
+# Filter the DataFrame based on selections
+filtered_df = tmp_df.copy()
 
-if apply_filters:
-    # Filter the DataFrame based on selections
-    filtered_df = tmp_df.copy()
+if selected_machine:
+    filtered_df = filtered_df[filtered_df['machine'].isin(selected_machine)]
+if selected_pipeline:
+    filtered_df = filtered_df[filtered_df['pipeline'].isin(selected_pipeline)]
+if selected_dx:
+    filtered_df = filtered_df[filtered_df['Dx'].isin(selected_dx)]
+if selected_sub_dx:
+    filtered_df = filtered_df[filtered_df['sub_Dx'].isin(selected_sub_dx)]
+if selected_note:
+    filtered_df = filtered_df[filtered_df['note'].isin(selected_note)]
+filtered_df = filtered_df[
+    filtered_df['datetime_processed'].between(selected_dates[0], selected_dates[1])
+]
 
-    if selected_machine:
-        filtered_df = filtered_df[filtered_df['machine'].isin(selected_machine)]
-    if selected_pipeline:
-        filtered_df = filtered_df[filtered_df['pipeline'].isin(selected_pipeline)]
-    if selected_dx:
-        filtered_df = filtered_df[filtered_df['Dx'].isin(selected_dx)]
-    if selected_sub_dx:
-        filtered_df = filtered_df[filtered_df['sub_Dx'].isin(selected_sub_dx)]
-    if selected_note:
-        filtered_df = filtered_df[filtered_df['note'].isin(selected_note)]
-    filtered_df = filtered_df[
-        filtered_df['datetime_processed'].between(selected_dates[0], selected_dates[1])
-    ]
+# Generate options for the multiselect based on the filtered DataFrame
+options = filtered_df.apply(
+    lambda row: f"{row['pipeline']}_{row['datetime_processed']}<<<{row['wsi_name']}",
+    axis=1
+).tolist()
 
-    # Generate options for the multiselect based on the filtered DataFrame
-    options = filtered_df.apply(
-        lambda row: f"{row['pipeline']}_{row['datetime_processed']}<<<{row['wsi_name']}",
-        axis=1
-    ).tolist()
+# Add a "Select All" button for slides
+select_all = st.button("Select All Slides")
+if select_all:
+    selected_slides = options
+else:
+    selected_slides = st.multiselect("Select Slides", options)
 
-    # Add a "Select All" button for slides
-    select_all = st.button("Select All Slides")
-    if select_all:
-        selected_slides = options
-    else:
-        selected_slides = st.multiselect("Select Slides", options, default=options)
+# Display the selected slides
+if selected_slides:
+    st.write("Selected Slides:")
+    st.write(selected_slides)
 
-    # Display the selected slides
-    if selected_slides:
-        st.write("Selected Slides:")
-        st.write(selected_slides)
-
-        # Automatically display the result cards for the selected slides
-        st.write("Result Cards:")
-        for slide in selected_slides:
+    # Automatically display the result cards for the selected slides
+    st.write("Result Cards:")
+    cols = st.columns(4)  # Create 4 columns for the image grid
+    for i, slide in enumerate(selected_slides):
+        with cols[i % 4]:  # Place each image in a column
             # Extract the remote_result_dir from the slide string
             pipeline_datetime_processed, wsi_name = slide.split("<<<")
             datetime_processed = pipeline_datetime_processed.split("_")[1]
@@ -121,6 +119,11 @@ if apply_filters:
             image_path = find_result_card(remote_result_dir)
             if image_path:
                 image = Image.open(image_path)
+                image.thumbnail((150, 150))  # Create a smaller version of the image
                 st.image(image, caption=os.path.basename(image_path))
+                if st.button(f"View {os.path.basename(image_path)}", key=f"button_{i}"):
+                    st.markdown(f"[Click here to view the full image](/{image_path})")
             else:
                 st.write(f"No result card found for: {slide}")
+else:
+    st.write("No slides selected.")
