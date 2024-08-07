@@ -127,8 +127,8 @@ if apply_filters:
         st.markdown(js_code, unsafe_allow_html=True)
 
 # Separate page for displaying the result cards
-if "result_page" in st.experimental_get_query_params():
-    selected_slides = st.experimental_get_query_params().get("slide", [])
+if "result_page" in st.query_params:
+    selected_slides = st.query_params.get("slide", [])
     st.title("Result Cards")
     for slide in selected_slides:
         pipeline_datetime_processed, wsi_name = slide.split("<<<")
