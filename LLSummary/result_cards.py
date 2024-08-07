@@ -7,7 +7,7 @@ from LLRunner.slide_result_compiling.BMA_diff_result_card import get_mini_result
 from LLRunner.config import results_dir
 from LLSummary.config import result_cards_dir
 
-def process_single_card(row, result_cards_dir, results_dir, max_retries=5, backoff_factor=1.5):
+def process_single_card(row, result_cards_dir, results_dir, max_retries=7, backoff_factor=1.5):
     """ Process a single result card with retry logic. """
     remote_result_dir = row['remote_result_dir']
     machine = row['machine']
