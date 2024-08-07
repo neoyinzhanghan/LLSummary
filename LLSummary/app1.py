@@ -17,6 +17,7 @@ import os
 import streamlit as st
 import pandas as pd
 from PIL import Image
+from tqdm import tqdm
 from LLRunner.slide_result_compiling.compile_results import compile_results
 from LLSummary.config import result_cards_dir
 from LLSummary.result_cards import find_result_card
@@ -112,7 +113,7 @@ if st.sidebar.button("Apply Filters"):
     # Add a button to generate result cards
     if st.button("Generate Result Cards"):
         st.write("Result Cards:")
-        for slide in selected_slides:
+        for slide in tqdm(selected_slides, desc="Generating Result Cards", total=len(selected_slides)):
             # Extract the remote_result_dir from the slide string
             pipeline, datetime_processed, wsi_name = slide.split("<<<")
             datetime_processed = datetime_processed.split("_")[1]
