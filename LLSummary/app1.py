@@ -16,7 +16,7 @@
 import streamlit as st
 import pandas as pd
 # Assuming tmp_df is generated from compile_results
-from LLRunner.slide_result_compilation.compile_results import compile_results
+from LLRunner.slide_result_compiling.compile_results import compile_results
 
 tmp_df = compile_results()
 
