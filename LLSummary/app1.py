@@ -31,23 +31,23 @@ st.sidebar.header("Filter Options")
 
 # Filter by machine
 machine_options = tmp_df['machine'].unique()
-selected_machine = st.sidebar.multiselect("Select Machine", machine_options, default=machine_options)
+selected_machine = st.sidebar.multiselect("Select Machine", machine_options)
 
 # Filter by pipeline
 pipeline_options = tmp_df['pipeline'].unique()
-selected_pipeline = st.sidebar.multiselect("Select Pipeline", pipeline_options, default=pipeline_options)
+selected_pipeline = st.sidebar.multiselect("Select Pipeline", pipeline_options)
 
 # Filter by Dx (Diagnosis)
 dx_options = tmp_df['Dx'].unique()
-selected_dx = st.sidebar.multiselect("Select Dx", dx_options, default=dx_options)
+selected_dx = st.sidebar.multiselect("Select Dx", dx_options)
 
 # Filter by sub_Dx (Sub-diagnosis)
 sub_dx_options = tmp_df['sub_Dx'].unique()
-selected_sub_dx = st.sidebar.multiselect("Select Sub Dx", sub_dx_options, default=sub_dx_options)
+selected_sub_dx = st.sidebar.multiselect("Select Sub Dx", sub_dx_options)
 
 # Filter by note
 note_options = tmp_df['note'].unique()
-selected_note = st.sidebar.multiselect("Select Note", note_options, default=note_options)
+selected_note = st.sidebar.multiselect("Select Note", note_options)
 
 # Filter by datetime_processed using a date range slider
 min_date = tmp_df['datetime_processed'].min().to_pydatetime()
@@ -59,28 +59,37 @@ selected_dates = st.sidebar.slider(
     value=(min_date, max_date)
 )
 
-# Filter the DataFrame based on selections
-filtered_df = tmp_df[
-    (tmp_df['machine'].isin(selected_machine)) &
-    (tmp_df['pipeline'].isin(selected_pipeline)) &
-    (tmp_df['Dx'].isin(selected_dx)) &
-    (tmp_df['sub_Dx'].isin(selected_sub_dx)) &
-    (tmp_df['note'].isin(selected_note)) &
-    (tmp_df['datetime_processed'].between(selected_dates[0], selected_dates[1]))
-]
+# Add an "Apply Filters" button
+if st.sidebar.button("Apply Filters"):
+    # Filter the DataFrame based on selections
+    filtered_df = tmp_df.copy()
 
-# Generate options for the multiselect based on the filtered DataFrame
-options = filtered_df.apply(
-    lambda row: f"{row['pipeline']}_{row['datetime_processed']}<<<{row['wsi_name']}",
-    axis=1
-).tolist()
+    if selected_machine:
+        filtered_df = filtered_df[filtered_df['machine'].isin(selected_machine)]
+    if selected_pipeline:
+        filtered_df = filtered_df[filtered_df['pipeline'].isin(selected_pipeline)]
+    if selected_dx:
+        filtered_df = filtered_df[filtered_df['Dx'].isin(selected_dx)]
+    if selected_sub_dx:
+        filtered_df = filtered_df[filtered_df['sub_Dx'].isin(selected_sub_dx)]
+    if selected_note:
+        filtered_df = filtered_df[filtered_df['note'].isin(selected_note)]
+    filtered_df = filtered_df[
+        filtered_df['datetime_processed'].between(selected_dates[0], selected_dates[1])
+    ]
 
-# Multiselect for slides
-selected_slides = st.multiselect("Select Slides", options, default=options)
+    # Generate options for the multiselect based on the filtered DataFrame
+    options = filtered_df.apply(
+        lambda row: f"{row['pipeline']}_{row['datetime_processed']}<<<{row['wsi_name']}",
+        axis=1
+    ).tolist()
 
-# Display the selected slides
-if selected_slides:
-    st.write("Selected Slides:")
-    st.write(selected_slides)
-else:
-    st.write("No slides selected.")
+    # Multiselect for slides
+    selected_slides = st.multiselect("Select Slides", options)
+
+    # Display the selected slides
+    if selected_slides:
+        st.write("Selected Slides:")
+        st.write(selected_slides)
+    else:
+        st.write("No slides selected.")
