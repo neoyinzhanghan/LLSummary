@@ -36,3 +36,14 @@ def find_result_card(remote_result_dir):
         return image_file_path
     else:
         return None
+    
+if __name__ == "__main__":
+    import pandas as pd
+    from LLRunner.slide_result_compiling.compile_results import compile_results
+    # Generate the DataFrame from compile_results
+    tmp_df = compile_results()
+
+    # Convert 'datetime_processed' to datetime if it's not already
+    tmp_df['datetime_processed'] = pd.to_datetime(tmp_df['datetime_processed'])
+
+    create_result_cards(tmp_df)
