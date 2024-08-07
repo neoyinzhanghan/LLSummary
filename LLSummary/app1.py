@@ -1,19 +1,3 @@
-
-#####
-# The tmp_df has the following columns:
-# - 'machine': the slide id
-# - 'hostname': the hostname of the machine
-# - 'username': the username of the machine
-# - 'remote_result_dir': the remote directory where the results are stored
-# - 'wsi_name': the name of the slide
-# - 'pipeline': the pipeline used to generate the results
-# - 'Dx': the diagnosis of the slide
-# - 'sub_Dx': the sub-diagnosis of the slide
-# - 'datetime_processed': the date and time the slide was processed
-# - 'note': any notes about the slide
-#####
-
-
 import os
 import streamlit as st
 import pandas as pd
