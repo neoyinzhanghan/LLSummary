@@ -100,6 +100,10 @@ if st.sidebar.button("Apply Filters"):
 filtered_df = st.session_state.get('filtered_df', tmp_df)
 options = st.session_state.get('options', [])
 
+# Handle the "Select All" functionality
+if st.button("Select All Slides"):
+    st.session_state['selected_slides'] = options
+
 # Maintain multiselect with current state
 selected_slides = st.session_state.get('selected_slides', [])
 selected_slides = st.multiselect("Select Slides", options, default=selected_slides)
@@ -129,3 +133,4 @@ if selected_slides:
                 st.image(image, caption=slide, use_column_width=True)  # Display the full image with the ability to expand
 else:
     st.write("No slides selected.")
+
