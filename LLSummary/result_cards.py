@@ -7,7 +7,7 @@ from LLRunner.slide_result_compiling.BMA_diff_result_card import get_mini_result
 from LLRunner.config import results_dir
 from LLSummary.config import result_cards_dir
 
-def process_single_card(row, result_cards_dir, results_dir, max_retries=7, backoff_factor=1.5):
+def process_single_card(row, result_cards_dir=result_cards_dir, results_dir=results_dir, max_retries=7, backoff_factor=1.5):
     """ Process a single result card with retry logic. """
     remote_result_dir = row['remote_result_dir']
     machine = row['machine']
@@ -31,7 +31,7 @@ def process_single_card(row, result_cards_dir, results_dir, max_retries=7, backo
     else:
         print(f"Failed to process {remote_result_dir} on {machine} after {max_retries} retries.")
 
-def create_result_cards(tmp_df, result_cards_dir, results_dir):
+def create_result_cards(tmp_df, result_cards_dir=result_cards_dir, results_dir=results_dir):
     """ Create result cards for each slide in the filtered DataFrame. """
 
     # if the result_cards_dir doesn't exist, create it
