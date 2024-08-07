@@ -15,15 +15,18 @@
 
 import streamlit as st
 import pandas as pd
-# Assuming tmp_df is generated from compile_results
 from LLRunner.slide_result_compiling.compile_results import compile_results
 
+# Generate the DataFrame from compile_results
 tmp_df = compile_results()
+
+# Convert 'datetime_processed' to datetime if it's not already
+tmp_df['datetime_processed'] = pd.to_datetime(tmp_df['datetime_processed'])
 
 # Title of the app
 st.title("Slide Result Selector")
 
-# Filter options
+# Sidebar for filter options
 st.sidebar.header("Filter Options")
 
 # Filter by machine
@@ -34,11 +37,11 @@ selected_machine = st.sidebar.multiselect("Select Machine", machine_options, def
 pipeline_options = tmp_df['pipeline'].unique()
 selected_pipeline = st.sidebar.multiselect("Select Pipeline", pipeline_options, default=pipeline_options)
 
-# Filter by Dx
+# Filter by Dx (Diagnosis)
 dx_options = tmp_df['Dx'].unique()
 selected_dx = st.sidebar.multiselect("Select Dx", dx_options, default=dx_options)
 
-# Filter by sub_Dx
+# Filter by sub_Dx (Sub-diagnosis)
 sub_dx_options = tmp_df['sub_Dx'].unique()
 selected_sub_dx = st.sidebar.multiselect("Select Sub Dx", sub_dx_options, default=sub_dx_options)
 
@@ -46,12 +49,17 @@ selected_sub_dx = st.sidebar.multiselect("Select Sub Dx", sub_dx_options, defaul
 note_options = tmp_df['note'].unique()
 selected_note = st.sidebar.multiselect("Select Note", note_options, default=note_options)
 
-# Filter by datetime_processed
-min_date = tmp_df['datetime_processed'].min()
-max_date = tmp_df['datetime_processed'].max()
-selected_dates = st.sidebar.slider("Select Date Range", min_value=min_date, max_value=max_date, value=(min_date, max_date))
+# Filter by datetime_processed using a date range slider
+min_date = tmp_df['datetime_processed'].min().to_pydatetime()
+max_date = tmp_df['datetime_processed'].max().to_pydatetime()
+selected_dates = st.sidebar.slider(
+    "Select Date Range",
+    min_value=min_date,
+    max_value=max_date,
+    value=(min_date, max_date)
+)
 
-# Filter the DataFrame
+# Filter the DataFrame based on selections
 filtered_df = tmp_df[
     (tmp_df['machine'].isin(selected_machine)) &
     (tmp_df['pipeline'].isin(selected_pipeline)) &
@@ -63,7 +71,8 @@ filtered_df = tmp_df[
 
 # Generate options for the multiselect based on the filtered DataFrame
 options = filtered_df.apply(
-    lambda row: f"{row['pipeline']}_{row['datetime_processed']}<<<{row['wsi_name']}", axis=1
+    lambda row: f"{row['pipeline']}_{row['datetime_processed']}<<<{row['wsi_name']}",
+    axis=1
 ).tolist()
 
 # Multiselect for slides
