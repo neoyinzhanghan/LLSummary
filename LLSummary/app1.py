@@ -87,8 +87,11 @@ if st.sidebar.button("Apply Filters"):
         axis=1
     ).tolist()
 
-    # Multiselect for slides
-    selected_slides = st.multiselect("Select Slides", options)
+    # Add a "Select All" button for slides
+    if st.button("Select All Slides"):
+        selected_slides = options
+    else:
+        selected_slides = st.multiselect("Select Slides", options, default=options)
 
     # Display the selected slides
     if selected_slides:
@@ -96,4 +99,3 @@ if st.sidebar.button("Apply Filters"):
         st.write(selected_slides)
     else:
         st.write("No slides selected.")
-
