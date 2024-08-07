@@ -23,6 +23,8 @@ def process_single_card(row, result_cards_dir=result_cards_dir, results_dir=resu
             if not os.path.exists(image_file_path):
                 mini_result_card = get_mini_result_card(os.path.join(results_dir, remote_result_dir), machine)
                 mini_result_card.save(image_file_path)
+            else:
+                print(f"Skipping {remote_result_dir} on {machine}: Result card already exists.")
             break  # Exit loop if successful
         except Exception as e:
             retries += 1
@@ -32,25 +34,33 @@ def process_single_card(row, result_cards_dir=result_cards_dir, results_dir=resu
     else:
         print(f"Failed to process {remote_result_dir} on {machine} after {max_retries} retries.")
 
-def create_result_cards(tmp_df, result_cards_dir=result_cards_dir, results_dir=results_dir):
-    """ Create result cards for each slide in the filtered DataFrame. """
+def create_result_cards(tmp_df, result_cards_dir=result_cards_dir, results_dir=results_dir, max_concurrency=10):
+    """ Create result cards for each slide in the filtered DataFrame with limited concurrency. """
 
     # if the result_cards_dir doesn't exist, create it
     if not os.path.exists(result_cards_dir):
         os.makedirs(result_cards_dir)
 
-    # Launch tasks in parallel
-    futures = [process_single_card.remote(row, result_cards_dir, results_dir) for _, row in tmp_df.iterrows()]
-
-    # Use tqdm to monitor the progress of the tasks
-    with tqdm(total=len(futures), desc="Creating Result Cards") as pbar:
+    # Launch tasks in parallel with controlled concurrency
+    futures = []
+    with tqdm(total=len(tmp_df), desc="Creating Result Cards") as pbar:
+        for index, row in tmp_df.iterrows():
+            if len(futures) >= max_concurrency:
+                # Wait for at least one task to complete before launching a new one
+                done, futures = ray.wait(futures, num_returns=1)
+                pbar.update(len(done))
+            
+            # Start a new task
+            futures.append(process_single_card.remote(row, result_cards_dir, results_dir))
+        
+        # Wait for the remaining tasks to complete
         while futures:
-            done, futures = ray.wait(futures, num_returns=1, timeout=0.1)
+            done, futures = ray.wait(futures, num_returns=1)
             pbar.update(len(done))
-            time.sleep(0.1)  # Sleep to prevent too frequent checks
 
     # Ensure all tasks are completed
     ray.get(futures)
+
 
 # def create_result_cards(tmp_df):
 #     """ Create result cards for each slide in the filtered DataFrame. """
