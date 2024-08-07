@@ -26,7 +26,15 @@ def load_data():
     """Load and cache the results data."""
     tmp_df = compile_results()
     tmp_df['datetime_processed'] = pd.to_datetime(tmp_df['datetime_processed'])
-    return tmp_df   
+    
+    # Generate the labels with indices
+    def generate_label(row, idx):
+        pipeline_short = row['pipeline'][:5]  # Shorten pipeline to the first 5 characters
+        wsi_short = row['wsi_name'][:8] + '...' if len(row['wsi_name']) > 8 else row['wsi_name']
+        return f"[{idx}] {pipeline_short}_{row['datetime_processed'].strftime('%Y-%m-%d')}<<<{wsi_short}"
+    
+    tmp_df['label'] = [generate_label(row, idx) for idx, row in tmp_df.iterrows()]
+    return tmp_df
 
 # Generate the DataFrame from compile_results (cached)
 tmp_df = load_data()
@@ -89,20 +97,15 @@ if st.sidebar.button("Apply Filters"):
         filtered_df['datetime_processed'].between(selected_dates[0], selected_dates[1])
     ]
 
-    # Abbreviate the options for display in the multiselect
-    def abbreviate_option(row):
-        pipeline_short = row['pipeline'][:5]  # Shorten pipeline to the first 5 characters
-        wsi_short = row['wsi_name'][:8] + '...' if len(row['wsi_name']) > 8 else row['wsi_name']
-        return f"{pipeline_short}_{row['datetime_processed'].strftime('%Y-%m-%d')}<<<{wsi_short}"
-
-    st.session_state['options'] = filtered_df.apply(abbreviate_option, axis=1).tolist()
+    # Store the filtered labels and options in session state
+    st.session_state['labels'] = filtered_df['label'].tolist()
     st.session_state['original_options'] = filtered_df.apply(
         lambda row: f"{row['pipeline']}_{row['datetime_processed']}<<<{row['wsi_name']}",
         axis=1
     ).tolist()
 
-# Retrieve the options from session state
-options = st.session_state.get('options', [])
+# Retrieve the labels from session state
+labels = st.session_state.get('labels', [])
 original_options = st.session_state.get('original_options', [])
 
 # Handle the "Select All" functionality
@@ -111,20 +114,19 @@ if st.button("Select All Slides"):
 
 # Maintain multiselect with current state
 selected_slides = st.session_state.get('selected_slides', [])
-selected_slides_display = st.multiselect("Select Slides", options, default=[
-    options[original_options.index(slide)] for slide in selected_slides
+selected_slides_display = st.multiselect("Select Slides", labels, default=[
+    labels[original_options.index(slide)] for slide in selected_slides
 ])
 
 # Update session state with the current selections
 st.session_state['selected_slides'] = [
-    original_options[options.index(display)] for display in selected_slides_display
+    original_options[labels.index(display)] for display in selected_slides_display
 ]
 
-# Display the selected slides with pseudo-index as label
+# Display the selected slides with labels
 if st.session_state['selected_slides']:
     st.write("Selected Slides:")
-    for idx, slide in enumerate(st.session_state['selected_slides']):
-        st.write(f"[{idx}] {slide}")
+    st.write(st.session_state['selected_slides'])
 
     # Automatically display the result cards for the selected slides
     st.write("Result Cards:")
@@ -143,4 +145,3 @@ if st.session_state['selected_slides']:
                 st.image(image, caption=f"[{i}] {slide}", use_column_width=True)  # Display the full image with the pseudo-index as caption
 else:
     st.write("No slides selected.")
-
