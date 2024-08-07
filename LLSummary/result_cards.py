@@ -1,26 +1,37 @@
 import os
+import ray
+import time
+import random
 from tqdm import tqdm
 from LLRunner.slide_result_compiling.BMA_diff_result_card import get_mini_result_card
 from LLRunner.config import results_dir
 from LLSummary.config import result_cards_dir
-import ray
-import time
 
-@ray.remote
-def process_single_card(row, result_cards_dir=result_cards_dir, results_dir=results_dir):
-    """ Process a single result card. """
+def process_single_card(row, result_cards_dir, results_dir, max_retries=5, backoff_factor=1.5):
+    """ Process a single result card with retry logic. """
     remote_result_dir = row['remote_result_dir']
     machine = row['machine']
 
     image_file_name = remote_result_dir + "_result_card.png"
     image_file_path = os.path.join(result_cards_dir, image_file_name)
 
-    # if the image file doesn't exist, create it
-    if not os.path.exists(image_file_path):
-        mini_result_card = get_mini_result_card(os.path.join(results_dir, remote_result_dir), machine)
-        mini_result_card.save(image_file_path)
+    retries = 0
+    while retries < max_retries:
+        try:
+            # If the image file doesn't exist, create it
+            if not os.path.exists(image_file_path):
+                mini_result_card = get_mini_result_card(os.path.join(results_dir, remote_result_dir), machine)
+                mini_result_card.save(image_file_path)
+            break  # Exit loop if successful
+        except Exception as e:
+            retries += 1
+            wait_time = backoff_factor ** retries + random.uniform(0, 1)  # Exponential backoff with jitter
+            print(f"Error processing {remote_result_dir} on {machine}: {e}. Retrying {retries}/{max_retries} in {wait_time:.2f} seconds.")
+            time.sleep(wait_time)
+    else:
+        print(f"Failed to process {remote_result_dir} on {machine} after {max_retries} retries.")
 
-def create_result_cards(tmp_df, result_cards_dir=result_cards_dir, results_dir=results_dir):
+def create_result_cards(tmp_df, result_cards_dir, results_dir):
     """ Create result cards for each slide in the filtered DataFrame. """
 
     # if the result_cards_dir doesn't exist, create it
