@@ -143,6 +143,7 @@ if st.session_state['selected_slides']:
             image_path = find_result_card(remote_result_dir)
             if image_path:
                 image = Image.open(image_path)
-                st.image(image, caption=f"[{i}] {slide}", use_column_width=True)  # Display the full image with the pseudo-index as caption
+                label = tmp_df.loc[tmp_df['remote_result_dir'] == pipeline_datetime_processed, 'label'].values[0]
+                st.image(image, caption=label, use_column_width=True)  # Display the full image with the pseudo-index as caption
 else:
     st.write("No slides selected.")
