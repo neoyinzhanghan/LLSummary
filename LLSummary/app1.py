@@ -89,7 +89,7 @@ if st.sidebar.button("Apply Filters"):
         filtered_df['datetime_processed'].between(selected_dates[0], selected_dates[1])
     ]
 
-    # Store the filtered DataFrame in session state
+    # Store the filtered DataFrame and options in session state
     st.session_state['filtered_df'] = filtered_df
     st.session_state['options'] = filtered_df.apply(
         lambda row: f"{row['pipeline']}_{row['datetime_processed']}<<<{row['wsi_name']}",
@@ -100,13 +100,12 @@ if st.sidebar.button("Apply Filters"):
 filtered_df = st.session_state.get('filtered_df', tmp_df)
 options = st.session_state.get('options', [])
 
-# Add a "Select All" button for slides
-if st.button("Select All Slides"):
-    st.session_state['selected_slides'] = options
-else:
-    st.session_state['selected_slides'] = st.multiselect("Select Slides", options, default=st.session_state.get('selected_slides', []))
+# Maintain multiselect with current state
+selected_slides = st.session_state.get('selected_slides', [])
+selected_slides = st.multiselect("Select Slides", options, default=selected_slides)
 
-selected_slides = st.session_state['selected_slides']
+# Update session state with the current selections
+st.session_state['selected_slides'] = selected_slides
 
 # Display the selected slides
 if selected_slides:
