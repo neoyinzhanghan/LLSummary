@@ -21,7 +21,7 @@ from LLRunner.slide_result_compiling.compile_results import compile_results
 from LLSummary.config import result_cards_dir
 from LLSummary.result_cards import find_result_card
 
-# @st.cache_data
+@st.cache_data
 def load_data():
     """Load and cache the results data."""
     tmp_df = compile_results()
@@ -71,7 +71,9 @@ selected_dates = st.sidebar.slider(
 )
 
 # Add an "Apply Filters" button
-if st.sidebar.button("Apply Filters"):
+apply_filters = st.sidebar.button("Apply Filters")
+
+if apply_filters:
     # Filter the DataFrame based on selections
     filtered_df = tmp_df.copy()
 
@@ -96,7 +98,8 @@ if st.sidebar.button("Apply Filters"):
     ).tolist()
 
     # Add a "Select All" button for slides
-    if st.button("Select All Slides"):
+    select_all = st.button("Select All Slides")
+    if select_all:
         selected_slides = options
     else:
         selected_slides = st.multiselect("Select Slides", options, default=options)
@@ -109,20 +112,20 @@ if st.sidebar.button("Apply Filters"):
         st.write("No slides selected.")
 
     # Add a button to generate result cards
-    if st.button("Generate Result Cards"):
+    generate_result_cards = st.button("Generate Result Cards")
+    if generate_result_cards:
         st.write("Button clicked!")  # Debugging statement
-        print("Generating Result Cards...")  # This should appear in the console
         st.write("Result Cards:")
-        # for slide in selected_slides:
-        #     # Extract the remote_result_dir from the slide string
-        #     pipeline_datetime_processed, wsi_name = slide.split("<<<")
-        #     datetime_processed = pipeline_datetime_processed.split("_")[1]
-        #     remote_result_dir = os.path.join(result_cards_dir, pipeline_datetime_processed)
+        for slide in selected_slides:
+            # Extract the remote_result_dir from the slide string
+            pipeline_datetime_processed, wsi_name = slide.split("<<<")
+            datetime_processed = pipeline_datetime_processed.split("_")[1]
+            remote_result_dir = os.path.join(result_cards_dir, pipeline_datetime_processed)
             
-        #     # Find and display the result card
-        #     image_path = find_result_card(remote_result_dir)
-        #     if image_path:
-        #         image = Image.open(image_path)
-        #         st.image(image, caption=os.path.basename(image_path))
-        #     else:
-        #         st.write(f"No result card found for: {slide}")
+            # Find and display the result card
+            image_path = find_result_card(remote_result_dir)
+            if image_path:
+                image = Image.open(image_path)
+                st.image(image, caption=os.path.basename(image_path))
+            else:
+                st.write(f"No result card found for: {slide}")
