@@ -21,7 +21,7 @@ from LLRunner.slide_result_compiling.compile_results import compile_results
 from LLSummary.config import result_cards_dir
 from LLSummary.result_cards import find_result_card
 
-@st.cache_data
+# @st.cache_data
 def load_data():
     """Load and cache the results data."""
     tmp_df = compile_results()
