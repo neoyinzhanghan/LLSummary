@@ -89,16 +89,13 @@ if st.sidebar.button("Apply Filters"):
         filtered_df['datetime_processed'].between(selected_dates[0], selected_dates[1])
     ]
 
-    # Abbreviate the options and include the index as a label
-    def abbreviate_option_with_index(row, index):
+    # Abbreviate the options for display in the multiselect
+    def abbreviate_option(row):
         pipeline_short = row['pipeline'][:5]  # Shorten pipeline to the first 5 characters
         wsi_short = row['wsi_name'][:8] + '...' if len(row['wsi_name']) > 8 else row['wsi_name']
-        return f"[{index}] {pipeline_short}_{row['datetime_processed'].strftime('%Y-%m-%d')}<<<{wsi_short}"
+        return f"{pipeline_short}_{row['datetime_processed'].strftime('%Y-%m-%d')}<<<{wsi_short}"
 
-    st.session_state['options'] = [
-        abbreviate_option_with_index(row, idx) 
-        for idx, row in filtered_df.iterrows()
-    ]
+    st.session_state['options'] = filtered_df.apply(abbreviate_option, axis=1).tolist()
     st.session_state['original_options'] = filtered_df.apply(
         lambda row: f"{row['pipeline']}_{row['datetime_processed']}<<<{row['wsi_name']}",
         axis=1
@@ -123,10 +120,11 @@ st.session_state['selected_slides'] = [
     original_options[options.index(display)] for display in selected_slides_display
 ]
 
-# Display the selected slides
+# Display the selected slides with pseudo-index as label
 if st.session_state['selected_slides']:
     st.write("Selected Slides:")
-    st.write(st.session_state['selected_slides'])
+    for idx, slide in enumerate(st.session_state['selected_slides']):
+        st.write(f"[{idx}] {slide}")
 
     # Automatically display the result cards for the selected slides
     st.write("Result Cards:")
@@ -142,7 +140,7 @@ if st.session_state['selected_slides']:
             image_path = find_result_card(remote_result_dir)
             if image_path:
                 image = Image.open(image_path)
-                st.image(image, caption=slide, use_column_width=True)  # Display the full image with the ability to expand
+                st.image(image, caption=f"[{i}] {slide}", use_column_width=True)  # Display the full image with the pseudo-index as caption
 else:
     st.write("No slides selected.")
 
