@@ -1,0 +1,1 @@
+result_cards_dir = "/media/hdd3/neo/tmp_result_cards"

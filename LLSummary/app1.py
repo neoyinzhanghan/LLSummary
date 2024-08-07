@@ -13,9 +13,14 @@
 # - 'note': any notes about the slide
 #####
 
+
+import os
 import streamlit as st
 import pandas as pd
+from PIL import Image
 from LLRunner.slide_result_compiling.compile_results import compile_results
+from LLSummary.config import result_cards_dir
+from LLSummary.result_cards import find_result_card
 
 # Generate the DataFrame from compile_results
 tmp_df = compile_results()
@@ -99,3 +104,20 @@ if st.sidebar.button("Apply Filters"):
         st.write(selected_slides)
     else:
         st.write("No slides selected.")
+
+    # Add a button to generate result cards
+    if st.button("Generate Result Cards"):
+        st.write("Result Cards:")
+        for slide in selected_slides:
+            # Extract the remote_result_dir from the slide string
+            pipeline, datetime_processed, wsi_name = slide.split("<<<")
+            datetime_processed = datetime_processed.split("_")[1]
+            remote_result_dir = os.path.join(result_cards_dir, f"{pipeline}_{datetime_processed}_{wsi_name}")
+            
+            # Find and display the result card
+            image_path = find_result_card(remote_result_dir)
+            if image_path:
+                image = Image.open(image_path)
+                st.image(image, caption=os.path.basename(image_path))
+            else:
+                st.write(f"No result card found for: {slide}")
