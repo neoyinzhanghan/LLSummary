@@ -112,6 +112,7 @@ if st.sidebar.button("Apply Filters"):
 
     # Add a button to generate result cards
     if st.button("Generate Result Cards"):
+        print("Generating Result Cards...")
         st.write("Result Cards:")
         for slide in tqdm(selected_slides, desc="Generating Result Cards", total=len(selected_slides)):
             # Extract the remote_result_dir from the slide string
