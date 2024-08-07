@@ -27,13 +27,14 @@ def load_data():
     tmp_df = compile_results()
     tmp_df['datetime_processed'] = pd.to_datetime(tmp_df['datetime_processed'])
     
-    # Generate the labels with indices
-    def generate_label(row, idx):
+    # Generate the labels with indices based on the DataFrame index
+    def generate_label(row):
+        idx = row.name  # Use the DataFrame index as the idx
         pipeline_short = row['pipeline'][:5]  # Shorten pipeline to the first 5 characters
         wsi_short = row['wsi_name'][:8] + '...' if len(row['wsi_name']) > 8 else row['wsi_name']
         return f"[{idx}] {pipeline_short}_{row['datetime_processed'].strftime('%Y-%m-%d')}<<<{wsi_short}"
     
-    tmp_df['label'] = [generate_label(row, idx) for idx, row in tmp_df.iterrows()]
+    tmp_df['label'] = tmp_df.apply(generate_label, axis=1)
     return tmp_df
 
 # Generate the DataFrame from compile_results (cached)
@@ -70,7 +71,7 @@ selected_note = st.sidebar.multiselect("Select Note", note_options)
 
 # Filter by datetime_processed using a date range slider
 min_date = tmp_df['datetime_processed'].min().to_pydatetime()
-max_date = tmp_df['datetime_processed'].max().to_pydatetime()
+max_date = tmp_df['datetime_processed'].max().to.pydatetime()
 selected_dates = st.sidebar.slider(
     "Select Date Range",
     min_value=min_date,
