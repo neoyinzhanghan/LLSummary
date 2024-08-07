@@ -41,11 +41,14 @@ selected_pipeline = st.sidebar.multiselect("Select Pipeline", pipeline_options)
 dx_options = tmp_df['Dx'].unique()
 selected_dx = st.sidebar.multiselect("Select Dx", dx_options)
 
-# Filter by sub_Dx (Sub-diagnosis)
-sub_dx_options = tmp_df['sub_Dx'].unique()
-selected_sub_dx = st.sidebar.multiselect("Select Sub Dx", sub_dx_options)
+# Conditional sub_Dx filter based on selected Dx
+if selected_dx:
+    sub_dx_options = tmp_df[tmp_df['Dx'].isin(selected_dx)]['sub_Dx'].unique()
+    selected_sub_dx = st.sidebar.multiselect("Select Sub Dx", sub_dx_options)
+else:
+    selected_sub_dx = []
 
-# Filter by note
+# Filter by note (Subtractive: if no note is selected, no filter is applied)
 note_options = tmp_df['note'].unique()
 selected_note = st.sidebar.multiselect("Select Note", note_options)
 
@@ -93,3 +96,4 @@ if st.sidebar.button("Apply Filters"):
         st.write(selected_slides)
     else:
         st.write("No slides selected.")
+
