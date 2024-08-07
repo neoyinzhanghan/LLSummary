@@ -1,6 +1,7 @@
 import os
 from tqdm import tqdm
 from LLRunner.slide_result_compiling.BMA_diff_result_card import get_mini_result_card
+from LLRunner.config import results_dir
 from LLSummary.config import result_cards_dir
 
 def create_result_cards(tmp_df):
@@ -22,7 +23,7 @@ def create_result_cards(tmp_df):
 
         # if the image file doesn't exist, create it
         if not os.path.exists(image_file_path):
-            mini_result_card = get_mini_result_card(remote_result_dir, machine)
+            mini_result_card = get_mini_result_card(os.path.join(results_dir, remote_result_dir), machine)
             mini_result_card.save(image_file_path)
 
 def find_result_card(remote_result_dir):
