@@ -13,7 +13,6 @@
 # - 'note': any notes about the slide
 #####
 
-
 import os
 import streamlit as st
 import pandas as pd
@@ -22,8 +21,13 @@ from LLRunner.slide_result_compiling.compile_results import compile_results
 from LLSummary.config import result_cards_dir
 from LLSummary.result_cards import find_result_card
 
-# Generate the DataFrame from compile_results
-tmp_df = compile_results()
+@st.cache_data
+def load_data():
+    """Load and cache the results data."""
+    return compile_results()
+
+# Generate the DataFrame from compile_results (cached)
+tmp_df = load_data()
 
 # Convert 'datetime_processed' to datetime if it's not already
 tmp_df['datetime_processed'] = pd.to_datetime(tmp_df['datetime_processed'])
@@ -59,7 +63,7 @@ selected_note = st.sidebar.multiselect("Select Note", note_options)
 
 # Filter by datetime_processed using a date range slider
 min_date = tmp_df['datetime_processed'].min().to_pydatetime()
-max_date = tmp_df['datetime_processed'].max().to_pydatetime()
+max_date = tmp_df['datetime_processed'].max().to.pydatetime()
 selected_dates = st.sidebar.slider(
     "Select Date Range",
     min_value=min_date,
