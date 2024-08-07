@@ -115,9 +115,9 @@ if st.sidebar.button("Apply Filters"):
         st.write("Result Cards:")
         for slide in tqdm(selected_slides, desc="Generating Result Cards", total=len(selected_slides)):
             # Extract the remote_result_dir from the slide string
-            pipeline, datetime_processed, wsi_name = slide.split("<<<")
+            pipeline_datetime_processed, wsi_name = slide.split("<<<")
             datetime_processed = datetime_processed.split("_")[1]
-            remote_result_dir = os.path.join(result_cards_dir, f"{pipeline}_{datetime_processed}_{wsi_name}")
+            remote_result_dir = os.path.join(result_cards_dir, pipeline_datetime_processed)
             
             # Find and display the result card
             image_path = find_result_card(remote_result_dir)
