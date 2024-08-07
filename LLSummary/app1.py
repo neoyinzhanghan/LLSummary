@@ -98,7 +98,7 @@ select_all = st.button("Select All Slides")
 if select_all:
     selected_slides = options
 else:
-    selected_slides = st.multiselect("Select Slides", options)
+    selected_slides = st.multiselect("Select Slides", options, default=options)
 
 # Display the selected slides
 if selected_slides:
@@ -119,11 +119,16 @@ if selected_slides:
             image_path = find_result_card(remote_result_dir)
             if image_path:
                 image = Image.open(image_path)
-                image.thumbnail((150, 150))  # Create a smaller version of the image
-                st.image(image, caption=os.path.basename(image_path))
-                if st.button(f"View {os.path.basename(image_path)}", key=f"button_{i}"):
-                    st.markdown(f"[Click here to view the full image](/{image_path})")
-            else:
-                st.write(f"No result card found for: {slide}")
+                thumbnail = image.resize((150, 150))  # Create a smaller version of the image
+                st.image(thumbnail, caption=slide)  # Display the pipeline_sdfsd<<<wsi_name
+                if st.button(f"View Full-Size", key=f"button_{i}"):
+                    st.session_state['full_image'] = image_path
+                    st.session_state['caption'] = slide
+
+    # Check if there's a full image to display
+    if 'full_image' in st.session_state:
+        st.write(f"### {st.session_state['caption']}")
+        full_image = Image.open(st.session_state['full_image'])
+        st.image(full_image, caption=st.session_state['caption'])
 else:
     st.write("No slides selected.")
