@@ -7,7 +7,7 @@ import ray
 import time
 
 @ray.remote
-def process_single_card(row, result_cards_dir, results_dir):
+def process_single_card(row, result_cards_dir=result_cards_dir, results_dir=results_dir):
     """ Process a single result card. """
     remote_result_dir = row['remote_result_dir']
     machine = row['machine']
@@ -20,7 +20,7 @@ def process_single_card(row, result_cards_dir, results_dir):
         mini_result_card = get_mini_result_card(os.path.join(results_dir, remote_result_dir), machine)
         mini_result_card.save(image_file_path)
 
-def create_result_cards(tmp_df, result_cards_dir, results_dir):
+def create_result_cards(tmp_df, result_cards_dir=result_cards_dir, results_dir=results_dir):
     """ Create result cards for each slide in the filtered DataFrame. """
 
     # if the result_cards_dir doesn't exist, create it
