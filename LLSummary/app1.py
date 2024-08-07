@@ -113,16 +113,16 @@ if st.sidebar.button("Apply Filters"):
         st.write("Button clicked!")  # Debugging statement
         print("Generating Result Cards...")  # This should appear in the console
         st.write("Result Cards:")
-        for slide in selected_slides:
-            # Extract the remote_result_dir from the slide string
-            pipeline_datetime_processed, wsi_name = slide.split("<<<")
-            datetime_processed = pipeline_datetime_processed.split("_")[1]
-            remote_result_dir = os.path.join(result_cards_dir, pipeline_datetime_processed)
+        # for slide in selected_slides:
+        #     # Extract the remote_result_dir from the slide string
+        #     pipeline_datetime_processed, wsi_name = slide.split("<<<")
+        #     datetime_processed = pipeline_datetime_processed.split("_")[1]
+        #     remote_result_dir = os.path.join(result_cards_dir, pipeline_datetime_processed)
             
-            # Find and display the result card
-            image_path = find_result_card(remote_result_dir)
-            if image_path:
-                image = Image.open(image_path)
-                st.image(image, caption=os.path.basename(image_path))
-            else:
-                st.write(f"No result card found for: {slide}")
+        #     # Find and display the result card
+        #     image_path = find_result_card(remote_result_dir)
+        #     if image_path:
+        #         image = Image.open(image_path)
+        #         st.image(image, caption=os.path.basename(image_path))
+        #     else:
+        #         st.write(f"No result card found for: {slide}")
