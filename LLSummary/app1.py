@@ -71,9 +71,7 @@ selected_dates = st.sidebar.slider(
 )
 
 # Add an "Apply Filters" button
-apply_filters = st.sidebar.button("Apply Filters")
-
-if apply_filters:
+if st.sidebar.button("Apply Filters"):
     # Filter the DataFrame based on selections
     filtered_df = tmp_df.copy()
 
@@ -91,38 +89,44 @@ if apply_filters:
         filtered_df['datetime_processed'].between(selected_dates[0], selected_dates[1])
     ]
 
-    # Generate options for the multiselect based on the filtered DataFrame
-    options = filtered_df.apply(
+    # Store the filtered DataFrame in session state
+    st.session_state['filtered_df'] = filtered_df
+    st.session_state['options'] = filtered_df.apply(
         lambda row: f"{row['pipeline']}_{row['datetime_processed']}<<<{row['wsi_name']}",
         axis=1
     ).tolist()
 
-    # Add a "Select All" button for slides
-    select_all = st.button("Select All Slides")
-    if select_all:
-        selected_slides = options
-    else:
-        selected_slides = st.multiselect("Select Slides", options, default=options)
+# Retrieve the filtered DataFrame and options from session state
+filtered_df = st.session_state.get('filtered_df', tmp_df)
+options = st.session_state.get('options', [])
 
-    # Display the selected slides
-    if selected_slides:
-        st.write("Selected Slides:")
-        st.write(selected_slides)
+# Add a "Select All" button for slides
+if st.button("Select All Slides"):
+    st.session_state['selected_slides'] = options
+else:
+    st.session_state['selected_slides'] = st.multiselect("Select Slides", options, default=st.session_state.get('selected_slides', []))
 
-        # Automatically display the result cards for the selected slides
-        st.write("Result Cards:")
-        cols = st.columns(4)  # Create 4 columns for the image grid
-        for i, slide in enumerate(selected_slides):
-            with cols[i % 4]:  # Place each image in a column
-                # Extract the remote_result_dir from the slide string
-                pipeline_datetime_processed, wsi_name = slide.split("<<<")
-                datetime_processed = pipeline_datetime_processed.split("_")[1]
-                remote_result_dir = os.path.join(result_cards_dir, pipeline_datetime_processed)
-                
-                # Find and display the result card
-                image_path = find_result_card(remote_result_dir)
-                if image_path:
-                    image = Image.open(image_path)
-                    st.image(image, caption=slide, use_column_width=True)  # Display the full image with the ability to expand
+selected_slides = st.session_state['selected_slides']
+
+# Display the selected slides
+if selected_slides:
+    st.write("Selected Slides:")
+    st.write(selected_slides)
+
+    # Automatically display the result cards for the selected slides
+    st.write("Result Cards:")
+    cols = st.columns(4)  # Create 4 columns for the image grid
+    for i, slide in enumerate(selected_slides):
+        with cols[i % 4]:  # Place each image in a column
+            # Extract the remote_result_dir from the slide string
+            pipeline_datetime_processed, wsi_name = slide.split("<<<")
+            datetime_processed = pipeline_datetime_processed.split("_")[1]
+            remote_result_dir = os.path.join(result_cards_dir, pipeline_datetime_processed)
+            
+            # Find and display the result card
+            image_path = find_result_card(remote_result_dir)
+            if image_path:
+                image = Image.open(image_path)
+                st.image(image, caption=slide, use_column_width=True)  # Display the full image with the ability to expand
 else:
     st.write("No slides selected.")
