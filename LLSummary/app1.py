@@ -123,16 +123,6 @@ if apply_filters:
                 image_path = find_result_card(remote_result_dir)
                 if image_path:
                     image = Image.open(image_path)
-                    thumbnail = image.resize((150, 150))  # Create a smaller version of the image
-                    st.image(thumbnail, caption=slide)  # Display the pipeline_sdfsd<<<wsi_name
-                    if st.button(f"View Full-Size", key=f"button_{i}"):
-                        st.session_state['full_image'] = image_path
-                        st.session_state['caption'] = slide
-
-        # Check if there's a full image to display
-        if 'full_image' in st.session_state:
-            st.write(f"### {st.session_state['caption']}")
-            full_image = Image.open(st.session_state['full_image'])
-            st.image(full_image, caption=st.session_state['caption'])
+                    st.image(image, caption=slide, use_column_width=True)  # Display the full image with the ability to expand
 else:
     st.write("No slides selected.")
