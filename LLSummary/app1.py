@@ -114,18 +114,30 @@ if apply_filters:
     # Add a button to generate result cards
     generate_result_cards = st.button("Generate Result Cards")
     if generate_result_cards:
-        st.write("Button clicked!")  # Debugging statement
-        st.write("Result Cards:")
-        for slide in selected_slides:
-            # Extract the remote_result_dir from the slide string
-            pipeline_datetime_processed, wsi_name = slide.split("<<<")
-            datetime_processed = pipeline_datetime_processed.split("_")[1]
-            remote_result_dir = os.path.join(result_cards_dir, pipeline_datetime_processed)
-            
-            # Find and display the result card
-            image_path = find_result_card(remote_result_dir)
-            if image_path:
-                image = Image.open(image_path)
-                st.image(image, caption=os.path.basename(image_path))
-            else:
-                st.write(f"No result card found for: {slide}")
+        # Encode the selected slides into a query string to pass to the new tab
+        query_string = "&".join([f"slide={slide}" for slide in selected_slides])
+        result_page_url = f"/result_page?{query_string}"
+
+        # Use JavaScript to open a new tab
+        js_code = f"""
+        <script type="text/javascript">
+            window.open("{result_page_url}", "_blank");
+        </script>
+        """
+        st.markdown(js_code, unsafe_allow_html=True)
+
+# Separate page for displaying the result cards
+if "result_page" in st.experimental_get_query_params():
+    selected_slides = st.experimental_get_query_params().get("slide", [])
+    st.title("Result Cards")
+    for slide in selected_slides:
+        pipeline_datetime_processed, wsi_name = slide.split("<<<")
+        datetime_processed = pipeline_datetime_processed.split("_")[1]
+        remote_result_dir = os.path.join(result_cards_dir, pipeline_datetime_processed)
+
+        image_path = find_result_card(remote_result_dir)
+        if image_path:
+            image = Image.open(image_path)
+            st.image(image, caption=os.path.basename(image_path))
+        else:
+            st.write(f"No result card found for: {slide}")
