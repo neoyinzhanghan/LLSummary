@@ -89,37 +89,49 @@ if st.sidebar.button("Apply Filters"):
         filtered_df['datetime_processed'].between(selected_dates[0], selected_dates[1])
     ]
 
-    # Store the filtered DataFrame and options in session state
-    st.session_state['filtered_df'] = filtered_df
-    st.session_state['options'] = filtered_df.apply(
+    # Abbreviate the options and include the index as a label
+    def abbreviate_option_with_index(row, index):
+        pipeline_short = row['pipeline'][:5]  # Shorten pipeline to the first 5 characters
+        wsi_short = row['wsi_name'][:8] + '...' if len(row['wsi_name']) > 8 else row['wsi_name']
+        return f"[{index}] {pipeline_short}_{row['datetime_processed'].strftime('%Y-%m-%d')}<<<{wsi_short}"
+
+    st.session_state['options'] = [
+        abbreviate_option_with_index(row, idx) 
+        for idx, row in filtered_df.iterrows()
+    ]
+    st.session_state['original_options'] = filtered_df.apply(
         lambda row: f"{row['pipeline']}_{row['datetime_processed']}<<<{row['wsi_name']}",
         axis=1
     ).tolist()
 
-# Retrieve the filtered DataFrame and options from session state
-filtered_df = st.session_state.get('filtered_df', tmp_df)
+# Retrieve the options from session state
 options = st.session_state.get('options', [])
+original_options = st.session_state.get('original_options', [])
 
 # Handle the "Select All" functionality
 if st.button("Select All Slides"):
-    st.session_state['selected_slides'] = options
+    st.session_state['selected_slides'] = original_options
 
 # Maintain multiselect with current state
 selected_slides = st.session_state.get('selected_slides', [])
-selected_slides = st.multiselect("Select Slides", options, default=selected_slides)
+selected_slides_display = st.multiselect("Select Slides", options, default=[
+    options[original_options.index(slide)] for slide in selected_slides
+])
 
 # Update session state with the current selections
-st.session_state['selected_slides'] = selected_slides
+st.session_state['selected_slides'] = [
+    original_options[options.index(display)] for display in selected_slides_display
+]
 
 # Display the selected slides
-if selected_slides:
+if st.session_state['selected_slides']:
     st.write("Selected Slides:")
-    st.write(selected_slides)
+    st.write(st.session_state['selected_slides'])
 
     # Automatically display the result cards for the selected slides
     st.write("Result Cards:")
     cols = st.columns(4)  # Create 4 columns for the image grid
-    for i, slide in enumerate(selected_slides):
+    for i, slide in enumerate(st.session_state['selected_slides']):
         with cols[i % 4]:  # Place each image in a column
             # Extract the remote_result_dir from the slide string
             pipeline_datetime_processed, wsi_name = slide.split("<<<")
