@@ -24,13 +24,13 @@ from LLSummary.result_cards import find_result_card
 @st.cache_data
 def load_data():
     """Load and cache the results data."""
-    return compile_results()
+
+    tmp_df = compile_results()
+    tmp_df['datetime_processed'] = pd.to_datetime(tmp_df['datetime_processed'])
+    return tmp_df   
 
 # Generate the DataFrame from compile_results (cached)
 tmp_df = load_data()
-
-# Convert 'datetime_processed' to datetime if it's not already
-tmp_df['datetime_processed'] = pd.to_datetime(tmp_df['datetime_processed'])
 
 # Title of the app
 st.title("Slide Result Selector")
