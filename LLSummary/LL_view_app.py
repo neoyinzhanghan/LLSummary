@@ -30,9 +30,10 @@ def load_data():
     # Generate the labels with indices based on the DataFrame index
     def generate_label(row):
         idx = row.name  # Use the DataFrame index as the idx
-        pipeline_short = row['pipeline'][:5]  # Shorten pipeline to the first 5 characters
-        wsi_short = row['wsi_name'][:8] + '...' if len(row['wsi_name']) > 8 else row['wsi_name']
-        return f"[{idx}] {pipeline_short}_{row['datetime_processed'].strftime('%Y-%m-%d')}<<<{wsi_short}"
+        machine = row['machine']  # Shorten machine to the first 5 characters
+        pipeline_short = row['pipeline']  # Shorten pipeline to the first 5 characters
+        wsi = row['wsi_name']
+        return f"[{idx}] {pipeline_short}_{row['datetime_processed'].strftime('%Y-%m-%d')}<<<{wsi}<<<{machine}"
     
     tmp_df['label'] = tmp_df.apply(generate_label, axis=1)
     return tmp_df
