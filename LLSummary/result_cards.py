@@ -116,7 +116,7 @@ def find_result_card(remote_result_dir):
     image_file_name = remote_result_dir + "_result_card.png"
     image_file_path = os.path.join(result_cards_dir, image_file_name)
 
-    print(image_file_path)
+    # print(image_file_path)
 
     # if the image file exists, return the path
     if os.path.exists(image_file_path):
