@@ -148,6 +148,8 @@ if st.session_state["selected_slides"]:
 
             # Find and display the result card
             image_path = find_result_card(remote_result_dir)
+
+            print(image_path)
             if image_path:
                 image = Image.open(image_path)
                 label = tmp_df.loc[
