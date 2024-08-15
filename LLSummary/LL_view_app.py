@@ -5,6 +5,7 @@ from PIL import Image
 from LLRunner.slide_result_compiling.compile_results import compile_results
 from LLSummary.config import result_cards_dir
 from LLSummary.result_cards import find_result_card
+import base64
 
 
 def generate_label(row):
@@ -142,49 +143,58 @@ if st.session_state["selected_slides"]:
     </style>
     """
 
+    def get_image_base64(image_path):
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+
     # Create a scrollable container for the result cards
-    st.markdown(
-        """
-        <div class="scrollable-container">
-        """,
-        unsafe_allow_html=True,
-    )
+    container_start = """
+    <div class="scrollable-container">
+    """
+    container_end = """
+    </div>
+    <style>
+    .scrollable-container {
+        height: 400px;
+        width: 100%;
+        overflow-y: scroll;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-top: 10px;
+    }
+    </style>
+    """
 
-    cols = st.columns(4)  # Create 4 columns for the image grid
+    # Initialize the HTML content for the scrollable container
+    html_content = container_start
 
+    # Create 4 columns for the image grid and add the images to the HTML content
     for i, slide in enumerate(st.session_state["selected_slides"]):
-        with cols[i % 4]:  # Place each image in a column
-            # Extract the remote_result_dir from the slide string
-            pipeline_datetime_processed, wsi_name, _ = slide.split("]")[1].strip().split("<<<")
-            datetime_processed = pipeline_datetime_processed.split("_")[1]
-            remote_result_dir = slide.split("]")[1].strip().split("<<<")[0]
+        pipeline_datetime_processed, wsi_name, _ = slide.split("]")[1].strip().split("<<<")
+        datetime_processed = pipeline_datetime_processed.split("_")[1]
+        remote_result_dir = slide.split("]")[1].strip().split("<<<")[0]
 
-            # Find and display the result card
-            image_path = find_result_card(remote_result_dir)
+        image_path = find_result_card(remote_result_dir)
 
-            if image_path:
-                image = Image.open(image_path)
-                label = tmp_df.loc[
-                    tmp_df["remote_result_dir"] == pipeline_datetime_processed, "label"
-                ].values[0]
-                st.image(image, caption=label, use_column_width=True)
+        if image_path:
+            image_base64 = get_image_base64(image_path)
+            label = tmp_df.loc[
+                tmp_df["remote_result_dir"] == pipeline_datetime_processed, "label"
+            ].values[0]
 
-    st.markdown(
-        """
-        </div>
-        <style>
-        .scrollable-container {
-            height: 400px;
-            width: 100%;
-            overflow-y: scroll;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-top: 10px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+            # Generate the HTML for each image and its caption
+            html_content += f"""
+            <div style="display: inline-block; width: 24%; padding: 5px; box-sizing: border-box;">
+                <img src="data:image/png;base64,{image_base64}" alt="{label}" style="width: 100%;">
+                <p style="text-align: center;">{label}</p>
+            </div>
+            """
+
+    # Close the container
+    html_content += container_end
+
+    # Display the scrollable container with images
+    st.markdown(html_content, unsafe_allow_html=True)
 else:
     st.write("No slides selected.")
 
