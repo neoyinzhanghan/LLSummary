@@ -13,6 +13,8 @@ output_df = parse_list_of_output_list(output_list)
 # get the list of unique wsi_names in the output_df
 wsi_names = output_df["wsi_name"].unique()
 
+print(wsi_names[:5])
+
 # filter the rowss in tmp_df that have wsi_name in the wsi_names list
 filtered_df = tmp_df[tmp_df["wsi_name"].isin(wsi_names)]
 
