@@ -22,7 +22,6 @@ def load_data():
     tmp_df["datetime_processed"] = pd.to_datetime(tmp_df["datetime_processed"])
 
     # Generate the labels with indices based on the DataFrame index
-
     tmp_df["label"] = tmp_df.apply(generate_label, axis=1)
     return tmp_df
 
@@ -68,6 +67,9 @@ selected_dates = st.sidebar.slider(
     max_value=max_date,
     value=(min_date, max_date),
 )
+
+# Add a checkbox to toggle the display of result cards
+show_result_cards = st.sidebar.checkbox("Show Result Cards", value=True)
 
 # Add an "Apply Filters" button
 if st.sidebar.button("Apply Filters"):
@@ -120,28 +122,31 @@ if st.session_state["selected_slides"]:
     st.write("Selected Slides:")
     # st.write(st.session_state["selected_slides"])
 
-    # Automatically display the result cards for the selected slides
-    st.write("Result Cards:")
-    cols = st.columns(4)  # Create 4 columns for the image grid
+    # Conditionally display the result cards based on the checkbox
+    if show_result_cards:
+        st.write("Result Cards:")
+        cols = st.columns(4)  # Create 4 columns for the image grid
 
-    for i, slide in enumerate(st.session_state["selected_slides"]):
-        with cols[i % 4]:  # Place each image in a column
-            # Extract the remote_result_dir from the slide string
-            pipeline_datetime_processed, wsi_name, _ = slide.split("]")[1].strip().split("<<<")
-            datetime_processed = pipeline_datetime_processed.split("_")[1]
-            remote_result_dir = slide.split("]")[1].strip().split("<<<")[0]
+        for i, slide in enumerate(st.session_state["selected_slides"]):
+            with cols[i % 4]:  # Place each image in a column
+                # Extract the remote_result_dir from the slide string
+                pipeline_datetime_processed, wsi_name, _ = slide.split("]")[1].strip().split("<<<")
+                datetime_processed = pipeline_datetime_processed.split("_")[1]
+                remote_result_dir = slide.split("]")[1].strip().split("<<<")[0]
 
-            # Find and display the result card
-            image_path = find_result_card(remote_result_dir)
+                # Find and display the result card
+                image_path = find_result_card(remote_result_dir)
 
-            if image_path:
-                image = Image.open(image_path)
-                label = tmp_df.loc[
-                    tmp_df["remote_result_dir"] == pipeline_datetime_processed, "label"
-                ].values[0]
-                st.image(
-                    image, caption=label, use_column_width=True
-                )  # Display the full image with the pseudo-index as caption
+                if image_path:
+                    image = Image.open(image_path)
+                    label = tmp_df.loc[
+                        tmp_df["remote_result_dir"] == pipeline_datetime_processed, "label"
+                    ].values[0]
+                    st.image(
+                        image, caption=label, use_column_width=True
+                    )  # Display the full image with the pseudo-index as caption
+    else:
+        st.write("Result cards display is turned off.")
 else:
     st.write("No slides selected.")
 
