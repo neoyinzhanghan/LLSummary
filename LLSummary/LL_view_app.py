@@ -26,7 +26,8 @@ def generate_label(row):
     machine = row["machine"]  # Shorten machine to the first 5 characters
     pipeline_short = row["pipeline"]  # Shorten pipeline to the first 5 characters
     wsi = row["wsi_name"]
-    return f"[{idx}] {pipeline_short}_{row['datetime_processed'].strftime('%Y-%m-%d')}<<<{wsi}<<<{machine}"
+    return f"[{idx}] {pipeline_short}_{row['datetime_processed'].strftime('%Y-%m-%d %H:%M:%S')}<<<{wsi}<<<{machine}"
+
 
 
 @st.cache_data
@@ -43,6 +44,9 @@ def load_data():
 
 # Generate the DataFrame from compile_results (cached)
 tmp_df = load_data()
+
+# print the top 5 rows of the DataFrame
+print(tmp_df.head())
 
 # Title of the app
 st.title("Slide Result Selector")
@@ -141,7 +145,7 @@ if st.session_state["selected_slides"]:
         with cols[i % 4]:  # Place each image in a column
             # Extract the remote_result_dir from the slide string
             pipeline_datetime_processed, wsi_name, _ = slide.split("]")[1].strip().split("<<<")
-            datetime_processed = pipeline_datetime_processed.split("_")[1]
+            datetime_processed = sum(pipeline_datetime_processed.split("_")[1:])
             # remote_result_dir = os.path.join(
             #     result_cards_dir, pipeline_datetime_processed
             # )
