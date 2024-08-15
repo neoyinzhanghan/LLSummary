@@ -142,10 +142,10 @@ if st.session_state["selected_slides"]:
             # Extract the remote_result_dir from the slide string
             pipeline_datetime_processed, wsi_name, _ = slide.split("]")[1].strip().split("<<<")
             datetime_processed = pipeline_datetime_processed.split("_")[1]
-            remote_result_dir = os.path.join(
-                result_cards_dir, pipeline_datetime_processed
-            )
-
+            # remote_result_dir = os.path.join(
+            #     result_cards_dir, pipeline_datetime_processed
+            # )
+            remote_result_dir = slide.split("]")[1].strip().split("<<<")[0]
             print(remote_result_dir)
 
             # Find and display the result card
