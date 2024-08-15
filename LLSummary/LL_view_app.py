@@ -1,17 +1,3 @@
-#####
-# The tmp_df has the following columns:
-# - 'machine': the slide id
-# - 'hostname': the hostname of the machine
-# - 'username': the username of the machine
-# - 'remote_result_dir': the remote directory where the results are stored
-# - 'wsi_name': the name of the slide
-# - 'pipeline': the pipeline used to generate the results
-# - 'Dx': the diagnosis of the slide
-# - 'sub_Dx': the sub-diagnosis of the slide
-# - 'datetime_processed': the date and time the slide was processed
-# - 'note': any notes about the slide
-#####
-
 import os
 import streamlit as st
 import pandas as pd
@@ -29,7 +15,6 @@ def generate_label(row):
     return f"[{idx}] {pipeline_short}_{row['datetime_processed'].strftime('%Y-%m-%d %H:%M:%S')}<<<{wsi}<<<{machine}"
 
 
-
 @st.cache_data
 def load_data():
     """Load and cache the results data."""
@@ -44,9 +29,6 @@ def load_data():
 
 # Generate the DataFrame from compile_results (cached)
 tmp_df = load_data()
-
-# print the top 5 rows of the DataFrame
-print(tmp_df.head())
 
 # Title of the app
 st.title("Slide Result Selector")
@@ -141,29 +123,51 @@ if st.session_state["selected_slides"]:
     # Automatically display the result cards for the selected slides
     st.write("Result Cards:")
     cols = st.columns(4)  # Create 4 columns for the image grid
-    for i, slide in enumerate(st.session_state["selected_slides"]):
-        with cols[i % 4]:  # Place each image in a column
-            # Extract the remote_result_dir from the slide string
-            pipeline_datetime_processed, wsi_name, _ = slide.split("]")[1].strip().split("<<<")
-            datetime_processed = pipeline_datetime_processed.split("_")[1]
-            # remote_result_dir = os.path.join(
-            #     result_cards_dir, pipeline_datetime_processed
-            # )
-            remote_result_dir = slide.split("]")[1].strip().split("<<<")[0]
-            print(remote_result_dir)
 
-            # Find and display the result card
-            image_path = find_result_card(remote_result_dir)
+    # Create a scrollable container for the result cards
+    with st.container():
+        st.markdown(
+            """
+            <div class="scrollable-container">
+            """,
+            unsafe_allow_html=True,
+        )
 
-            print(image_path)
-            if image_path:
-                image = Image.open(image_path)
-                label = tmp_df.loc[
-                    tmp_df["remote_result_dir"] == pipeline_datetime_processed, "label"
-                ].values[0]
-                st.image(
-                    image, caption=label, use_column_width=True
-                )  # Display the full image with the pseudo-index as caption
+        for i, slide in enumerate(st.session_state["selected_slides"]):
+            with cols[i % 4]:  # Place each image in a column
+                # Extract the remote_result_dir from the slide string
+                pipeline_datetime_processed, wsi_name, _ = slide.split("]")[1].strip().split("<<<")
+                datetime_processed = pipeline_datetime_processed.split("_")[1]
+                remote_result_dir = slide.split("]")[1].strip().split("<<<")[0]
+
+                # Find and display the result card
+                image_path = find_result_card(remote_result_dir)
+
+                if image_path:
+                    image = Image.open(image_path)
+                    label = tmp_df.loc[
+                        tmp_df["remote_result_dir"] == pipeline_datetime_processed, "label"
+                    ].values[0]
+                    st.image(
+                        image, caption=label, use_column_width=True
+                    )  # Display the full image with the pseudo-index as caption
+
+        st.markdown(
+            """
+            </div>
+            <style>
+            .scrollable-container {
+                height: 400px;
+                width: 100%;
+                overflow-y: scroll;
+                border: 1px solid #ccc;
+                padding: 10px;
+                margin-top: 10px;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
 else:
     st.write("No slides selected.")
 
