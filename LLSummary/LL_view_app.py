@@ -125,63 +125,73 @@ if st.session_state["selected_slides"]:
     cols = st.columns(4)  # Create 4 columns for the image grid
 
     # Create a scrollable container for the result cards
-    with st.container():
-        st.markdown(
-            """
-            <div class="scrollable-container">
-            """,
-            unsafe_allow_html=True,
+    container_start = """
+    <div class="scrollable-container">
+    """
+    container_end = """
+    </div>
+    <style>
+    .scrollable-container {
+        height: 400px;
+        width: 100%;
+        overflow-y: scroll;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-top: 10px;
+    }
+    </style>
+    """
+
+    # Initialize the HTML content for the scrollable container
+    html_content = container_start
+
+    # Create 4 columns for the image grid and add the images to the HTML content
+    for i, slide in enumerate(st.session_state["selected_slides"]):
+        pipeline_datetime_processed, wsi_name, _ = (
+            slide.split("]")[1].strip().split("<<<")
         )
+        datetime_processed = pipeline_datetime_processed.split("_")[1]
+        remote_result_dir = slide.split("]")[1].strip().split("<<<")[0]
 
-        for i, slide in enumerate(st.session_state["selected_slides"]):
-            with cols[i % 4]:  # Place each image in a column
-                # Extract the remote_result_dir from the slide string
-                pipeline_datetime_processed, wsi_name, _ = slide.split("]")[1].strip().split("<<<")
-                datetime_processed = pipeline_datetime_processed.split("_")[1]
-                remote_result_dir = slide.split("]")[1].strip().split("<<<")[0]
+        image_path = find_result_card(remote_result_dir)
 
-                # Find and display the result card
-                image_path = find_result_card(remote_result_dir)
+        if image_path:
+            image = Image.open(image_path)
+            label = tmp_df.loc[
+                tmp_df["remote_result_dir"] == pipeline_datetime_processed, "label"
+            ].values[0]
 
-                if image_path:
-                    image = Image.open(image_path)
-                    label = tmp_df.loc[
-                        tmp_df["remote_result_dir"] == pipeline_datetime_processed, "label"
-                    ].values[0]
-                    st.image(
-                        image, caption=label, use_column_width=True
-                    )  # Display the full image with the pseudo-index as caption
-
-        st.markdown(
-            """
+            # Generate the HTML for each image and its caption
+            html_content += f"""
+            <div style="display: inline-block; width: 24%; padding: 5px; box-sizing: border-box;">
+                <img src="{image_path}" alt="{label}" style="width: 100%;">
+                <p style="text-align: center;">{label}</p>
             </div>
-            <style>
-            .scrollable-container {
-                height: 400px;
-                width: 100%;
-                overflow-y: scroll;
-                border: 1px solid #ccc;
-                padding: 10px;
-                margin-top: 10px;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
+            """
+
+    # Close the container
+    html_content += container_end
+
+    # Display the scrollable container with images
+    st.markdown(html_content, unsafe_allow_html=True)
 else:
     st.write("No slides selected.")
 
 # Display a submit button and an input box for saving the filtered DataFrame
-dir_input = st.text_input("Specify the directory to save the file:")
+dir_input = st.text_input(
+    "Specify the path to save the file in the format of /path/to/file/filename.csv:"
+)
 
 if st.button("Submit"):
     if dir_input and selected_slides_display:
         # Extract the indices from the original DataFrame
-        indices = [int(slide.split(']')[0].strip('[')) for slide in selected_slides_display]
+        indices = [
+            int(slide.split("]")[0].strip("[")) for slide in selected_slides_display
+        ]
         # Filter the DataFrame to only include selected slides
         save_df = tmp_df.loc[indices, :]
         # Construct the file path
-        file_path = os.path.join(dir_input, "selected_slides.csv")
+        file_path = dir_input
         # Save the DataFrame as a CSV file
         save_df.to_csv(file_path, index=False)
         st.success(f"File saved successfully at {file_path}")
