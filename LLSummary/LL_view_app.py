@@ -146,6 +146,8 @@ if st.session_state["selected_slides"]:
                 result_cards_dir, pipeline_datetime_processed
             )
 
+            print(remote_result_dir)
+
             # Find and display the result card
             image_path = find_result_card(remote_result_dir)
 
