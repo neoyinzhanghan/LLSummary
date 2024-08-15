@@ -145,7 +145,7 @@ if st.session_state["selected_slides"]:
         with cols[i % 4]:  # Place each image in a column
             # Extract the remote_result_dir from the slide string
             pipeline_datetime_processed, wsi_name, _ = slide.split("]")[1].strip().split("<<<")
-            datetime_processed = sum(pipeline_datetime_processed.split("_")[1:])
+            datetime_processed = pipeline_datetime_processed.split("_")[1]
             # remote_result_dir = os.path.join(
             #     result_cards_dir, pipeline_datetime_processed
             # )
