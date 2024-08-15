@@ -166,3 +166,20 @@ if st.session_state["selected_slides"]:
                 )  # Display the full image with the pseudo-index as caption
 else:
     st.write("No slides selected.")
+
+# Display a submit button and an input box for saving the filtered DataFrame
+dir_input = st.text_input("Specify the directory to save the file:")
+
+if st.button("Submit"):
+    if dir_input and selected_slides_display:
+        # Extract the indices from the original DataFrame
+        indices = [int(slide.split(']')[0].strip('[')) for slide in selected_slides_display]
+        # Filter the DataFrame to only include selected slides
+        save_df = tmp_df.loc[indices, :]
+        # Construct the file path
+        file_path = os.path.join(dir_input, "selected_slides.csv")
+        # Save the DataFrame as a CSV file
+        save_df.to_csv(file_path, index=False)
+        st.success(f"File saved successfully at {file_path}")
+    else:
+        st.error("Please specify a valid directory and ensure slides are selected.")
