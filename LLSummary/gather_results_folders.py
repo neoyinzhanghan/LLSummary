@@ -47,11 +47,13 @@ for cohort_file in cohort_files:
         os.makedirs(local_dir, exist_ok=True)
 
         # Run the rsync command with retries and exponential backoff
-        sftp_with_retries(
+        rsync_with_retries(
             username,
             hostname,
             remote_result_dir,
             local_dir,
+            max_retries=5,
+            initial_backoff=1,
         )
 
         # Add metadata to the metadata_dict

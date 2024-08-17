@@ -65,30 +65,52 @@ def ssh_open_file(
         client.close()
 
 
+import os
+import shutil
+import subprocess
+import time
+
+
 def rsync_with_retries(
-    username, hostname, remote_result_dir, local_dir, max_retries=5, initial_backoff=1
+    username,
+    hostname,
+    remote_result_dir,
+    local_dir,
+    max_retries=5,
+    initial_backoff=1,
+    port=22,
+    password=None,
+    key_filename=None,
 ):
     backoff = initial_backoff
     attempt = 0
+
     if os.path.exists(local_dir):
-        # remove the local directory if it already exists
+        # Remove the local directory if it already exists
         shutil.rmtree(local_dir)
 
     os.makedirs(local_dir)
+
     while attempt < max_retries:
         try:
             # Construct the rsync command
-            remote_path = f"{username}@{hostname}:{remote_result_dir}/"
-            command = ["rsync", "-avz", remote_path, local_dir]
+            rsync_command = [
+                "rsync",
+                "-avz",  # Archive mode, verbose, compress
+                "-e",
+                f"ssh -p {port}",
+                f"{username}@{hostname}:{remote_result_dir}/",  # Remote source
+                local_dir,  # Local destination
+            ]
 
             # Run the rsync command
-            result = subprocess.run(command, check=True)
+            result = subprocess.run(rsync_command, check=True, capture_output=True)
 
-            if result.returncode == 0:
-                print(f"Successfully synced {remote_result_dir} to {local_dir}")
-                return True
+            print(f"Successfully synced {remote_result_dir} to {local_dir}")
+            return True
+
         except subprocess.CalledProcessError as e:
-            print(f"Error syncing {remote_result_dir}: {e}")
+            print(f"Error syncing {remote_result_dir}: {e.stderr.decode().strip()}")
             attempt += 1
             print(f"Retrying in {backoff} seconds... (Attempt {attempt}/{max_retries})")
             time.sleep(backoff)
