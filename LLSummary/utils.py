@@ -136,6 +136,11 @@ def scp_with_retries(
             # separate the directory and the file name
             cell_save_dir = os.path.dirname(cell_save_path)
 
+            print(remote_path)
+            print(cell_save_dir)
+            print(cell_save_path)
+            print(cell_filename)
+
             os.makedirs(cell_save_dir, exist_ok=True)
             command = ["scp", remote_path, cell_save_dir]
 
