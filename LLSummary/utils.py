@@ -162,3 +162,62 @@ def scp_with_retries(
 
     print(f"Failed to copy {cell_path} after {max_retries} attempts.")
     return False
+
+def sftp_with_retries(
+    username, hostname, cell_path, cell_save_path, max_retries=5, initial_backoff=1, port=22, password=None, key_filename=None
+):
+    """
+    Copies a file from a remote server to the local machine using SFTP with retries and exponential backoff.
+
+    :param username: Username for the remote server.
+    :param hostname: Hostname or IP address of the remote server.
+    :param cell_path: Path to the file on the remote server.
+    :param cell_save_path: Path to save the file locally.
+    :param max_retries: Maximum number of retry attempts.
+    :param initial_backoff: Initial backoff time in seconds.
+    :param port: SSH port (default is 22).
+    :param password: Password for SSH login, if not using key authentication.
+    :param key_filename: Path to SSH private key file, if using key authentication.
+    :return: True if the file is successfully copied, False otherwise.
+    """
+    backoff = initial_backoff
+    attempt = 0
+
+    while attempt < max_retries:
+        try:
+            # Establish an SSH connection
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+            if password:
+                ssh.connect(hostname, port=port, username=username, password=password)
+            elif key_filename:
+                ssh.connect(hostname, port=port, username=username, key_filename=key_filename)
+            else:
+                ssh.connect(hostname, port=port, username=username)
+
+            sftp = ssh.open_sftp()
+
+            # Ensure the local directory exists
+            cell_save_dir = os.path.dirname(cell_save_path)
+            os.makedirs(cell_save_dir, exist_ok=True)
+
+            # Copy the file from the remote server to the local machine
+            sftp.get(cell_path, cell_save_path)
+
+            # Close the SFTP connection
+            sftp.close()
+            ssh.close()
+
+            print(f"Successfully copied {cell_path} to {cell_save_path}")
+            return True
+
+        except Exception as e:
+            print(f"Error copying {cell_path}: {e}")
+            attempt += 1
+            print(f"Retrying in {backoff} seconds... (Attempt {attempt}/{max_retries})")
+            time.sleep(backoff)
+            backoff *= 2  # Exponential backoff
+
+    print(f"Failed to copy {cell_path} after {max_retries} attempts.")
+    return False

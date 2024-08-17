@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from tqdm import tqdm
-from LLSummary.utils import rsync_with_retries, scp_with_retries, ssh_open_file
+from LLSummary.utils import rsync_with_retries, scp_with_retries, ssh_open_file, sftp_with_retries
 from LLRunner.config import results_dir
 
 cohort_files = ["/media/hdd3/greg/AML_bma.csv"]
@@ -110,7 +110,7 @@ for cohort_file in cohort_files:
             cell_save_path = os.path.join(cell_dir, f"{cell_id}.jpg")
 
             # scp the cell_path to the cell_save_path
-            scp_with_retries(username, hostname, cell_path, cell_save_path)
+            sftp_with_retries(username, hostname, cell_path, cell_save_path)
 
             # add metadata to the metadata_dict
             metadata_dicts[i]["cell_id"].append(cell_id)
