@@ -28,6 +28,8 @@ def ssh_open_file(
     """
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    sftp = None
+    remote_file = None
 
     try:
         if key_filename:
@@ -44,14 +46,16 @@ def ssh_open_file(
         yield file_obj
 
     finally:
-        try:
-            remote_file.close()
-        except Exception as e:
-            print(f"Error closing remote file: {e}")
-        try:
-            sftp.close()
-        except Exception as e:
-            print(f"Error closing SFTP connection: {e}")
+        if remote_file is not None:
+            try:
+                remote_file.close()
+            except Exception as e:
+                print(f"Error closing remote file: {e}")
+        if sftp is not None:
+            try:
+                sftp.close()
+            except Exception as e:
+                print(f"Error closing SFTP connection: {e}")
         client.close()
 
 
