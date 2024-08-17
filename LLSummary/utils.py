@@ -1,11 +1,12 @@
 import os
 import pandas as pd
-from tqdm import tqdm
 import subprocess
 import time
 import paramiko
-from contextlib import contextmanager
+import shutil
 import io
+from contextlib import contextmanager
+from tqdm import tqdm
 
 
 @contextmanager
@@ -64,6 +65,11 @@ def rsync_with_retries(
 ):
     backoff = initial_backoff
     attempt = 0
+    if os.path.exists(local_dir):
+        # remove the local directory if it already exists
+        shutil.rmtree(local_dir)
+
+    os.makedirs(local_dir)
     while attempt < max_retries:
         try:
             # Construct the rsync command
