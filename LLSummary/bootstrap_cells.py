@@ -1,13 +1,19 @@
 import os
 import pandas as pd
 from tqdm import tqdm
-from LLSummary.utils import rsync_with_retries, scp_with_retries, ssh_open_file, sftp_with_retries
+from LLSummary.utils import (
+    rsync_with_retries,
+    scp_with_retries,
+    ssh_open_file,
+    sftp_with_retries,
+)
 from LLRunner.config import results_dir
 
 cohort_files = ["/media/hdd3/greg/AML_bma.csv"]
 save_dir = "/media/hdd3/greg/test"
 
 num_cartridges = 10
+num_per_cartridge = 3
 
 metadata_dicts = []
 cell_names = [
@@ -89,49 +95,60 @@ for cohort_file in cohort_files:
         with ssh_open_file(username, hostname, cells_info_file) as f:
             cells_info_df = pd.read_csv(f)
 
-        # randomly sample num_cartridges number of cells with replacement
-        sampled_cells_info_df = cells_info_df.sample(n=num_cartridges, replace=True)
+        sampled_cells_info_df_list = []
+
+        for i in range(num_cartridges):
+            sampled_cells_info_df = cells_info_df.sample(n=num_per_cartridge).to_dict(
+                orient="records"
+            )
+
+            sampled_cells_info_df_list.append(sampled_cells_info_df)
 
         # iterate over the sampled cells
         for i in range(num_cartridges):
-            # get the row of the sampled cell df as dict
-            cell_info = sampled_cells_info_df.iloc[i].to_dict()
+            sampled_cells_info_df = sampled_cells_info_df_list[i]
 
-            # get the name of the cell
-            name = cell_info["name"]
-            label = cell_info["label"]
+            for j in range(num_per_cartridge):
+                # get the row of the sampled cell df as dict
+                cell_info = sampled_cells_info_df.iloc[j].to_dict()
 
-            # cell_path is remote_result_dir/cells/label/name
-            cell_path = os.path.join(remote_result_dir, "cells", label, name)
+                # get the name of the cell
+                name = cell_info["name"]
+                label = cell_info["label"]
 
-            # define the local directory to save the data
-            cartridge_dir = os.path.join(save_dir, f"cartridge_{i}")
-            cell_dir = os.path.join(cartridge_dir, label)
-            cell_save_path = os.path.join(cell_dir, f"{cell_id}.jpg")
+                # cell_path is remote_result_dir/cells/label/name
+                cell_path = os.path.join(remote_result_dir, "cells", label, name)
 
-            # scp the cell_path to the cell_save_path
-            sftp_with_retries(username, hostname, cell_path, cell_save_path)
+                # define the local directory to save the data
+                cartridge_dir = os.path.join(save_dir, f"cartridge_{i}")
+                cell_dir = os.path.join(cartridge_dir, label)
+                cell_save_path = os.path.join(cell_dir, f"{cell_id}.jpg")
 
-            # add metadata to the metadata_dict
-            metadata_dicts[i]["cell_id"].append(cell_id)
-            metadata_dicts[i]["wsi_name"].append(row["wsi_name"])
-            metadata_dicts[i]["username"].append(username)
-            metadata_dicts[i]["hostname"].append(hostname)
-            metadata_dicts[i]["machine"].append(row["machine"])
-            metadata_dicts[i]["remote_result_dir"].append(row["remote_result_dir"])
-            metadata_dicts[i]["original_name"].append(name)
-            metadata_dicts[i]["Dx"].append(row["Dx"])
-            metadata_dicts[i]["sub_Dx"].append(row["sub_Dx"])
-            metadata_dicts[i]["confidence"].append(cell_info["confidence"])
-            metadata_dicts[i]["note"].append(row["note"])
-            metadata_dicts[i]["datetime_processed"].append(row["datetime_processed"])
-            metadata_dicts[i]["label"].append(label)
-            metadata_dicts[i]["VoL"].append(cell_info["VoL"])
+                # scp the cell_path to the cell_save_path
+                sftp_with_retries(username, hostname, cell_path, cell_save_path)
 
-            for cellname in cell_names:
-                metadata_dicts[i][cellname].append(cell_info[cellname])
+                # add metadata to the metadata_dict
+                metadata_dicts[i]["cell_id"].append(cell_id)
+                metadata_dicts[i]["wsi_name"].append(row["wsi_name"])
+                metadata_dicts[i]["username"].append(username)
+                metadata_dicts[i]["hostname"].append(hostname)
+                metadata_dicts[i]["machine"].append(row["machine"])
+                metadata_dicts[i]["remote_result_dir"].append(row["remote_result_dir"])
+                metadata_dicts[i]["original_name"].append(name)
+                metadata_dicts[i]["Dx"].append(row["Dx"])
+                metadata_dicts[i]["sub_Dx"].append(row["sub_Dx"])
+                metadata_dicts[i]["confidence"].append(cell_info["confidence"])
+                metadata_dicts[i]["note"].append(row["note"])
+                metadata_dicts[i]["datetime_processed"].append(
+                    row["datetime_processed"]
+                )
+                metadata_dicts[i]["label"].append(label)
+                metadata_dicts[i]["VoL"].append(cell_info["VoL"])
 
-            cell_id += 1
+                for cellname in cell_names:
+                    metadata_dicts[i][cellname].append(cell_info[cellname])
+
+                cell_id += 1
 
 # save the metadata_dicts as a list of DataFrames
 metadata_dfs = [pd.DataFrame(metadata_dict) for metadata_dict in metadata_dicts]
