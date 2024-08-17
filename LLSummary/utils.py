@@ -132,7 +132,15 @@ def scp_with_retries(
         try:
             # Construct the SCP command
             remote_path = f"{username}@{hostname}:{cell_path}"
-            command = ["scp", remote_path, cell_save_path]
+            cell_filename = os.path.basename(cell_path)
+            # separate the directory and the file name
+            cell_save_dir = os.path.dirname(cell_save_path)
+
+            os.makedirs(cell_save_dir, exist_ok=True)
+            command = ["scp", remote_path, cell_save_dir]
+
+            current_name = os.path.join(cell_save_dir, cell_filename)
+            os.rename(current_name, cell_save_path)
 
             # Run the SCP command
             result = subprocess.run(command, check=True)
