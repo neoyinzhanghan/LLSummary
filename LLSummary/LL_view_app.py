@@ -130,7 +130,9 @@ if st.session_state["selected_slides"]:
         for i, slide in enumerate(st.session_state["selected_slides"]):
             with cols[i % 4]:  # Place each image in a column
                 # Extract the remote_result_dir from the slide string
-                pipeline_datetime_processed, wsi_name, _ = slide.split("]")[1].strip().split("<<<")
+                pipeline_datetime_processed, wsi_name, _ = (
+                    slide.split("]")[1].strip().split("<<<")
+                )
                 datetime_processed = pipeline_datetime_processed.split("_")[1]
                 remote_result_dir = slide.split("]")[1].strip().split("<<<")[0]
 
@@ -140,7 +142,8 @@ if st.session_state["selected_slides"]:
                 if image_path:
                     image = Image.open(image_path)
                     label = tmp_df.loc[
-                        tmp_df["remote_result_dir"] == pipeline_datetime_processed, "label"
+                        tmp_df["remote_result_dir"] == pipeline_datetime_processed,
+                        "label",
                     ].values[0]
                     st.image(
                         image, caption=label, use_column_width=True
@@ -151,12 +154,16 @@ else:
     st.write("No slides selected.")
 
 # Display a submit button and an input box for saving the filtered DataFrame
-dir_input = st.text_input("Specify the path to save the file in the format of /path/to/file/filename.csv:")
+dir_input = st.text_input(
+    "Specify the path to save the file in the format of /path/to/file/filename.csv:"
+)
 
 if st.button("Submit"):
     if dir_input and selected_slides_display:
         # Extract the indices from the original DataFrame
-        indices = [int(slide.split(']')[0].strip('[')) for slide in selected_slides_display]
+        indices = [
+            int(slide.split("]")[0].strip("[")) for slide in selected_slides_display
+        ]
         # Filter the DataFrame to only include selected slides
         save_df = tmp_df.loc[indices, :]
         # Construct the file path
