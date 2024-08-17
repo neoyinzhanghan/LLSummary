@@ -122,7 +122,7 @@ for cohort_file in cohort_files:
             metadata_dicts[i]["original_name"].append(name)
             metadata_dicts[i]["Dx"].append(row["Dx"])
             metadata_dicts[i]["sub_Dx"].append(row["sub_Dx"])
-            metadata_dicts[i]["confidence"].append(row["confidence"])
+            metadata_dicts[i]["confidence"].append(cell_info["confidence"])
             metadata_dicts[i]["note"].append(row["note"])
             metadata_dicts[i]["datetime_processed"].append(row["datetime_processed"])
             metadata_dicts[i]["label"].append(label)
