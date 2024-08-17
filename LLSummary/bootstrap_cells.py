@@ -4,7 +4,7 @@ from tqdm import tqdm
 from LLSummary.utils import rsync_with_retries, scp_with_retries, ssh_open_file
 from LLRunner.config import results_dir
 
-cohort_files = []
+cohort_files = ["/media/hdd3/greg/AML_bma.csv"]
 save_dir = "/media/hdd3/greg/test"
 
 num_cartridges = 10
