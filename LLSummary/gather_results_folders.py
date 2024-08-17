@@ -4,7 +4,7 @@ from tqdm import tqdm
 from LLSummary.utils import rsync_with_retries, sftp_with_retries
 from LLRunner.config import results_dir
 
-cohort_files = []
+cohort_files = ["/media/hdd3/greg/AML_bma.csv"]
 save_dir = "/media/hdd3/greg/test"
 
 os.makedirs(save_dir, exist_ok=True)
