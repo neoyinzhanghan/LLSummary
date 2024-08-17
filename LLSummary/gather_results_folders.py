@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import shutil
 from tqdm import tqdm
 from LLSummary.utils import rsync_with_retries, sftp_with_retries
 from LLRunner.config import results_dir
@@ -40,7 +41,7 @@ for cohort_file in cohort_files:
         # remove the local directory if it already exists, which means we always overwrite the data
         # NOTE ths behaviour is expected because the data pooling right now is for viewing purposes only
         if os.path.exists(local_dir):
-            os.rmdir(local_dir)
+            shutil.rmtree(local_dir)
             os.makedirs(local_dir, exist_ok=True)
 
         os.makedirs(local_dir, exist_ok=True)
