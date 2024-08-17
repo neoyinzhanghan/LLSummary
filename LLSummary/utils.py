@@ -1,17 +1,14 @@
 import os
 import pandas as pd
-import subprocess
 import time
 import paramiko
 import shutil
 import io
-from contextlib import contextmanager
-from tqdm import tqdm
-import os
-import shutil
-import paramiko
 import time
 import stat
+import subprocess
+from contextlib import contextmanager
+from tqdm import tqdm
 
 
 @contextmanager
@@ -63,12 +60,6 @@ def ssh_open_file(
             except Exception as e:
                 print(f"Error closing SFTP connection: {e}")
         client.close()
-
-
-import os
-import shutil
-import subprocess
-import time
 
 
 def rsync_with_retries(
@@ -157,73 +148,4 @@ def scp_with_retries(
             backoff *= 2  # Exponential backoff
 
     print(f"Failed to copy {cell_path} after {max_retries} attempts.")
-    return False
-
-
-def sftp_with_retries(
-    username,
-    hostname,
-    remote_result_dir,
-    local_dir,
-    max_retries=5,
-    initial_backoff=1,
-    port=22,
-    password=None,
-    key_filename=None,
-):
-    backoff = initial_backoff
-    attempt = 0
-
-    if os.path.exists(local_dir):
-        # remove the local directory if it already exists
-        shutil.rmtree(local_dir)
-
-    os.makedirs(local_dir)
-
-    while attempt < max_retries:
-        try:
-            # Establish an SSH connection
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-            if password:
-                ssh.connect(hostname, port=port, username=username, password=password)
-            elif key_filename:
-                ssh.connect(
-                    hostname, port=port, username=username, key_filename=key_filename
-                )
-            else:
-                ssh.connect(hostname, port=port, username=username)
-
-            sftp = ssh.open_sftp()
-
-            # Recursively download the remote directory
-            def recursive_download(remote_dir, local_dir):
-                os.makedirs(local_dir, exist_ok=True)
-                for item in sftp.listdir_attr(remote_dir):
-                    remote_item = f"{remote_dir}/{item.filename}"
-                    local_item = os.path.join(local_dir, item.filename)
-
-                    if stat.S_ISDIR(item.st_mode):
-                        recursive_download(remote_item, local_item)
-                    else:
-                        sftp.get(remote_item, local_item)
-
-            recursive_download(remote_result_dir, local_dir)
-
-            # Close the connections
-            sftp.close()
-            ssh.close()
-
-            print(f"Successfully synced {remote_result_dir} to {local_dir}")
-            return True
-
-        except Exception as e:
-            print(f"Error syncing {remote_result_dir}: {e}")
-            attempt += 1
-            print(f"Retrying in {backoff} seconds... (Attempt {attempt}/{max_retries})")
-            time.sleep(backoff)
-            backoff *= 2  # Exponential backoff
-
-    print(f"Failed to sync {remote_result_dir} after {max_retries} attempts.")
     return False
