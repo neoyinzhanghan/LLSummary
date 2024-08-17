@@ -133,65 +133,58 @@ def scp_with_retries(
     return False
 
 
-import os
-import shutil
-import time
 import paramiko
+from contextlib import contextmanager
+import io
+from stat import S_ISDIR
 
-def sftp_with_retries(
-    username, hostname, remote_result_dir, local_dir, max_retries=5, initial_backoff=1, port=22, password=None, key_filename=None
-):
-    backoff = initial_backoff
-    attempt = 0
+@contextmanager
+def ssh_open_file(username, hostname, remote_path, port=22, key_filename=None, password=None):
+    """
+    Context manager to open a remote file over SSH and return a file-like object.
+    
+    Args:
+        username (str): SSH username.
+        hostname (str): Remote hostname or IP address.
+        remote_path (str): Path to the file on the remote server.
+        port (int): SSH port (default is 22).
+        key_filename (str): Path to SSH private key file (optional).
+        password (str): Password for SSH key (optional).
+        
+    Yields:
+        file-like object: A file-like object for reading the remote file.
+    """
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    sftp = None
+    remote_file = None
+    
+    try:
+        if key_filename:
+            client.connect(hostname, port=port, username=username, key_filename=key_filename)
+        else:
+            client.connect(hostname, port=port, username=username, password=password)
+        
+        sftp = client.open_sftp()
 
-    if os.path.exists(local_dir):
-        # remove the local directory if it already exists
-        shutil.rmtree(local_dir)
+        # Check if the remote path is a directory
+        if S_ISDIR(sftp.stat(remote_path).st_mode):
+            raise IsADirectoryError(f"The remote path {remote_path} is a directory, not a file.")
+        
+        remote_file = sftp.open(remote_path, mode='r')
+        file_obj = io.StringIO(remote_file.read().decode('utf-8'))
+        
+        yield file_obj
 
-    os.makedirs(local_dir)
-
-    while attempt < max_retries:
-        try:
-            # Establish an SSH connection
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-            if password:
-                ssh.connect(hostname, port=port, username=username, password=password)
-            elif key_filename:
-                ssh.connect(hostname, port=port, username=username, key_filename=key_filename)
-            else:
-                ssh.connect(hostname, port=port, username=username)
-
-            sftp = ssh.open_sftp()
-
-            # Recursively download the remote directory
-            def recursive_download(remote_dir, local_dir):
-                os.makedirs(local_dir, exist_ok=True)
-                for item in sftp.listdir_attr(remote_dir):
-                    remote_item = f"{remote_dir}/{item.filename}"
-                    local_item = os.path.join(local_dir, item.filename)
-
-                    if paramiko.SFTPAttributes.is_dir(item):
-                        recursive_download(remote_item, local_item)
-                    else:
-                        sftp.get(remote_item, local_item)
-
-            recursive_download(remote_result_dir, local_dir)
-
-            # Close the connections
-            sftp.close()
-            ssh.close()
-
-            print(f"Successfully synced {remote_result_dir} to {local_dir}")
-            return True
-
-        except Exception as e:
-            print(f"Error syncing {remote_result_dir}: {e}")
-            attempt += 1
-            print(f"Retrying in {backoff} seconds... (Attempt {attempt}/{max_retries})")
-            time.sleep(backoff)
-            backoff *= 2  # Exponential backoff
-
-    print(f"Failed to sync {remote_result_dir} after {max_retries} attempts.")
-    return False
+    finally:
+        if remote_file is not None:
+            try:
+                remote_file.close()
+            except Exception as e:
+                print(f"Error closing remote file: {e}")
+        if sftp is not None:
+            try:
+                sftp.close()
+            except Exception as e:
+                print(f"Error closing SFTP connection: {e}")
+        client.close()
