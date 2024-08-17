@@ -7,6 +7,11 @@ import shutil
 import io
 from contextlib import contextmanager
 from tqdm import tqdm
+import os
+import shutil
+import paramiko
+import time
+import stat
 
 
 @contextmanager
@@ -132,8 +137,17 @@ def scp_with_retries(
     print(f"Failed to copy {cell_path} after {max_retries} attempts.")
     return False
 
+
 def sftp_with_retries(
-    username, hostname, remote_result_dir, local_dir, max_retries=5, initial_backoff=1, port=22, password=None, key_filename=None
+    username,
+    hostname,
+    remote_result_dir,
+    local_dir,
+    max_retries=5,
+    initial_backoff=1,
+    port=22,
+    password=None,
+    key_filename=None,
 ):
     backoff = initial_backoff
     attempt = 0
@@ -153,7 +167,9 @@ def sftp_with_retries(
             if password:
                 ssh.connect(hostname, port=port, username=username, password=password)
             elif key_filename:
-                ssh.connect(hostname, port=port, username=username, key_filename=key_filename)
+                ssh.connect(
+                    hostname, port=port, username=username, key_filename=key_filename
+                )
             else:
                 ssh.connect(hostname, port=port, username=username)
 
@@ -166,7 +182,7 @@ def sftp_with_retries(
                     remote_item = f"{remote_dir}/{item.filename}"
                     local_item = os.path.join(local_dir, item.filename)
 
-                    if paramiko.SFTPAttributes.is_dir(item):
+                    if stat.S_ISDIR(item.st_mode):
                         recursive_download(remote_item, local_item)
                     else:
                         sftp.get(remote_item, local_item)
