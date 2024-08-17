@@ -98,9 +98,7 @@ for cohort_file in cohort_files:
         sampled_cells_info_df_list = []
 
         for i in range(num_cartridges):
-            sampled_cells_info_df = cells_info_df.sample(n=num_per_cartridge).to_dict(
-                orient="records"
-            )
+            sampled_cells_info_df = cells_info_df.sample(n=num_per_cartridge)
 
             sampled_cells_info_df_list.append(sampled_cells_info_df)
 
