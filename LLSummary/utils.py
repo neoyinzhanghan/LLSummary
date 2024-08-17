@@ -3,6 +3,56 @@ import pandas as pd
 from tqdm import tqdm
 import subprocess
 import time
+import paramiko
+from contextlib import contextmanager
+import io
+
+
+@contextmanager
+def ssh_open_file(
+    username, hostname, remote_path, port=22, key_filename=None, password=None
+):
+    """
+    Context manager to open a remote file over SSH and return a file-like object.
+
+    Args:
+        username (str): SSH username.
+        hostname (str): Remote hostname or IP address.
+        remote_path (str): Path to the file on the remote server.
+        port (int): SSH port (default is 22).
+        key_filename (str): Path to SSH private key file (optional).
+        password (str): Password for SSH key (optional).
+
+    Yields:
+        file-like object: A file-like object for reading the remote file.
+    """
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    try:
+        if key_filename:
+            client.connect(
+                hostname, port=port, username=username, key_filename=key_filename
+            )
+        else:
+            client.connect(hostname, port=port, username=username, password=password)
+
+        sftp = client.open_sftp()
+        remote_file = sftp.open(remote_path, mode="r")
+        file_obj = io.StringIO(remote_file.read().decode("utf-8"))
+
+        yield file_obj
+
+    finally:
+        try:
+            remote_file.close()
+        except Exception as e:
+            print(f"Error closing remote file: {e}")
+        try:
+            sftp.close()
+        except Exception as e:
+            print(f"Error closing SFTP connection: {e}")
+        client.close()
 
 
 def rsync_with_retries(
