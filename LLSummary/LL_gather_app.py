@@ -11,6 +11,9 @@ def main():
     # User selects what they want to do
     option = st.selectbox(
         "Select the action you want to perform:",
+        options=[
+            "Sample Cells by Classes",
+        ],
     )
 
     if option == "Sample Cells by Classes":
