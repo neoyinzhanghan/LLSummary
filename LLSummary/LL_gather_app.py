@@ -78,14 +78,19 @@ def main():
                 overwrite = st.checkbox("Overwrite existing files?")
 
             with st.spinner("Processing... see console for details"):
-                sample_cells_by_classes(
-                    cohort_files,
-                    save_dir,
-                    cell_types,
-                    num_cartridges,
-                    num_per_cartridge,
-                    cell_names,
-                )
+
+                try:
+                    sample_cells_by_classes(
+                        cohort_files,
+                        save_dir,
+                        cell_types,
+                        num_cartridges,
+                        num_per_cartridge,
+                        cell_names,
+                    )
+                except Exception as e:
+                    st.error(f"An error occurred: {e}")
+                    return
             st.success("Processing completed!")
 
 
