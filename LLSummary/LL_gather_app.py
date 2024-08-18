@@ -27,14 +27,6 @@ def main():
 
         save_dir = st.text_input("Enter the save directory path:")
 
-        # if the save_dir does not exist, create it
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-        else:
-            st.warning("The save directory already exists. Files may be overwritten.")
-            # ask the user if they want to overwrite the files
-            overwrite = st.checkbox("Overwrite existing files?")
-
         cell_names = [
             "B1",
             "B2",
@@ -74,6 +66,17 @@ def main():
 
         # Button to submit and run the processing
         if st.button("Process Files"):
+
+            # if the save_dir does not exist, create it
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            else:
+                st.warning(
+                    "The save directory already exists. Files may be overwritten."
+                )
+                # ask the user if they want to overwrite the files
+                overwrite = st.checkbox("Overwrite existing files?")
+
             with st.spinner("Processing... see console for details"):
                 sample_cells_by_classes(
                     cohort_files,
