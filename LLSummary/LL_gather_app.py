@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+import shutil
 from LLSummary.sample_cells_by_classes import (
     sample_cells_by_classes,
 )  # Import the function from your module
@@ -64,18 +65,27 @@ def main():
             "Enter the number of samples per cartridge:", min_value=1, value=3
         )
 
+        overwrite_if_save_dir_exists = st.checkbox(
+            "Overwrite existing files if the save directory already exists?"
+        )
+
         # Button to submit and run the processing
         if st.button("Process Files"):
 
             # if the save_dir does not exist, create it
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
-            else:
+            elif overwrite_if_save_dir_exists:
                 st.warning(
-                    "The save directory already exists. Files may be overwritten."
+                    "The save directory already exists. Existing files will be overwritten."
                 )
-                # ask the user if they want to overwrite the files
-                overwrite = st.checkbox("Overwrite existing files?")
+                shutil.rmtree(save_dir)
+                os.makedirs(save_dir)
+            else:
+                st.error(
+                    "The save directory already exists. Please choose a different save directory, or set the checkbox to overwrite existing files."
+                )
+                return
 
             with st.spinner("Processing... see console for details"):
 
