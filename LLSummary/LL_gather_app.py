@@ -1,6 +1,6 @@
 import os
 import streamlit as st
-from sample_cells_by_classes import (
+from LLSummary.sample_cells_by_classes import (
     sample_cells_by_classes,
 )  # Import the function from your module
 
