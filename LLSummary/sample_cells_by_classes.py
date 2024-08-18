@@ -71,6 +71,8 @@ def sample_cells_by_classes(
             # Only keep rows where the label is in cell_types
             cell_info_df = cells_info_df[cells_info_df["label"].isin(cell_types)]
 
+            no_cell = False
+
             for i in range(num_cartridges):
 
                 # if the number of rows is 0, we keep the cell_info_df as is, which means nothing will happen
@@ -79,6 +81,8 @@ def sample_cells_by_classes(
                     print(
                         f"UserWarning: No cells found for the given cell_types {cell_types} for {row['wsi_name']}"
                     )
+
+                    no_cell = True
 
                 # if the number of cells is less than the number of cells per cartridge, we will sample with replacement
                 elif cell_info_df.shape[0] < num_per_cartridge:
@@ -89,53 +93,56 @@ def sample_cells_by_classes(
                     sampled_cells_info_df = cell_info_df.sample(n=num_per_cartridge)
                 sampled_cells_info_df_list.append(sampled_cells_info_df)
 
-            # Iterate over the sampled cells
-            for i in range(num_cartridges):
-                sampled_cells_info_df = sampled_cells_info_df_list[i]
+            if not no_cell:
+                # Iterate over the sampled cells
+                for i in range(num_cartridges):
+                    sampled_cells_info_df = sampled_cells_info_df_list[i]
 
-                for j in range(num_per_cartridge):
-                    # Get the row of the sampled cell df as dict
-                    cell_info = sampled_cells_info_df.iloc[j].to_dict()
+                    for j in range(num_per_cartridge):
+                        # Get the row of the sampled cell df as dict
+                        cell_info = sampled_cells_info_df.iloc[j].to_dict()
 
-                    # Get the name of the cell
-                    name = cell_info["name"]
-                    label = cell_info["label"]
+                        # Get the name of the cell
+                        name = cell_info["name"]
+                        label = cell_info["label"]
 
-                    # Cell path is remote_result_dir/cells/label/name
-                    cell_path = os.path.join(remote_result_dir, "cells", label, name)
+                        # Cell path is remote_result_dir/cells/label/name
+                        cell_path = os.path.join(
+                            remote_result_dir, "cells", label, name
+                        )
 
-                    # Define the local directory to save the data
-                    cartridge_dir = os.path.join(save_dir, f"cartridge_{i}")
-                    cell_dir = os.path.join(cartridge_dir, label)
-                    cell_save_path = os.path.join(cell_dir, f"{cell_id}.jpg")
+                        # Define the local directory to save the data
+                        cartridge_dir = os.path.join(save_dir, f"cartridge_{i}")
+                        cell_dir = os.path.join(cartridge_dir, label)
+                        cell_save_path = os.path.join(cell_dir, f"{cell_id}.jpg")
 
-                    # SFTP the cell_path to the cell_save_path
-                    sftp_with_retries(username, hostname, cell_path, cell_save_path)
+                        # SFTP the cell_path to the cell_save_path
+                        sftp_with_retries(username, hostname, cell_path, cell_save_path)
 
-                    # Add metadata to the metadata_dict
-                    metadata_dicts[i]["cell_id"].append(cell_id)
-                    metadata_dicts[i]["wsi_name"].append(row["wsi_name"])
-                    metadata_dicts[i]["username"].append(username)
-                    metadata_dicts[i]["hostname"].append(hostname)
-                    metadata_dicts[i]["machine"].append(row["machine"])
-                    metadata_dicts[i]["remote_result_dir"].append(
-                        row["remote_result_dir"]
-                    )
-                    metadata_dicts[i]["original_name"].append(name)
-                    metadata_dicts[i]["Dx"].append(row["Dx"])
-                    metadata_dicts[i]["sub_Dx"].append(row["sub_Dx"])
-                    metadata_dicts[i]["confidence"].append(cell_info["confidence"])
-                    metadata_dicts[i]["note"].append(row["note"])
-                    metadata_dicts[i]["datetime_processed"].append(
-                        row["datetime_processed"]
-                    )
-                    metadata_dicts[i]["label"].append(label)
-                    metadata_dicts[i]["VoL"].append(cell_info["VoL"])
+                        # Add metadata to the metadata_dict
+                        metadata_dicts[i]["cell_id"].append(cell_id)
+                        metadata_dicts[i]["wsi_name"].append(row["wsi_name"])
+                        metadata_dicts[i]["username"].append(username)
+                        metadata_dicts[i]["hostname"].append(hostname)
+                        metadata_dicts[i]["machine"].append(row["machine"])
+                        metadata_dicts[i]["remote_result_dir"].append(
+                            row["remote_result_dir"]
+                        )
+                        metadata_dicts[i]["original_name"].append(name)
+                        metadata_dicts[i]["Dx"].append(row["Dx"])
+                        metadata_dicts[i]["sub_Dx"].append(row["sub_Dx"])
+                        metadata_dicts[i]["confidence"].append(cell_info["confidence"])
+                        metadata_dicts[i]["note"].append(row["note"])
+                        metadata_dicts[i]["datetime_processed"].append(
+                            row["datetime_processed"]
+                        )
+                        metadata_dicts[i]["label"].append(label)
+                        metadata_dicts[i]["VoL"].append(cell_info["VoL"])
 
-                    for cellname in cell_names:
-                        metadata_dicts[i][cellname].append(cell_info[cellname])
+                        for cellname in cell_names:
+                            metadata_dicts[i][cellname].append(cell_info[cellname])
 
-                    cell_id += 1
+                        cell_id += 1
 
     # Save the metadata_dicts as a list of DataFrames
     metadata_dfs = [pd.DataFrame(metadata_dict) for metadata_dict in metadata_dicts]
