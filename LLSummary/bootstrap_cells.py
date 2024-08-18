@@ -9,8 +9,8 @@ from LLSummary.utils import (
 )
 from LLRunner.config import results_dir
 
-cohort_files = ["/media/hdd3/greg/AML_bma.csv"]
-save_dir = "/media/hdd3/greg/test"
+cohort_files = ["/media/hdd3/greg/apl_bma.csv"]
+save_dir = "/media/hdd3/greg/apl_bma_cells"
 
 num_cartridges = 10
 num_per_cartridge = 3
