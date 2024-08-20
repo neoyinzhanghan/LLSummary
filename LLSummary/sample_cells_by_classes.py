@@ -84,11 +84,11 @@ def sample_cells_by_classes(
 
                     no_cell = True
 
-                # if the number of cells is less than the number of cells per cartridge, we will sample with replacement
+                # if the number of cells is less than the number of cells per cartridge, we will keep the whole cell_info_df as it is and raise a warning
                 elif cell_info_df.shape[0] < num_per_cartridge:
-                    sampled_cells_info_df = cell_info_df.sample(
-                        n=num_per_cartridge, replace=True
-                    )
+                    sampled_cells_info_df = cell_info_df
+                    # then shuffle the rows
+                    sampled_cells_info_df = sampled_cells_info_df.sample(frac=1)
                 else:
                     sampled_cells_info_df = cell_info_df.sample(n=num_per_cartridge)
                 sampled_cells_info_df_list.append(sampled_cells_info_df)
@@ -98,7 +98,15 @@ def sample_cells_by_classes(
                 for i in range(num_cartridges):
                     sampled_cells_info_df = sampled_cells_info_df_list[i]
 
-                    for j in range(num_per_cartridge):
+                    # if the number of cells is less than the number of cells per cartridge, we will keep the whole cell_info_df as it is and raise a warning
+                    num_rows = sampled_cells_info_df.shape[0]
+
+                    if num_rows < num_per_cartridge:
+                        print(
+                            f"UserWarning: Not enough cells for cartridge {i} for {row['wsi_name']} cell types {cell_types}, only {num_rows} cells found"
+                        )
+
+                    for j in range(min(num_per_cartridge, num_rows)):
                         # Get the row of the sampled cell df as dict
                         cell_info = sampled_cells_info_df.iloc[j].to_dict()
 
