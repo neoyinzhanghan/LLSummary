@@ -4,6 +4,7 @@ import shutil
 from LLSummary.sample_cells_by_classes import (
     sample_cells_by_classes,
 )  # Import the function from your module
+from LLSummary.collect_results_folders import collect_result_folders
 
 
 def main():
@@ -98,6 +99,39 @@ def main():
                         num_per_cartridge,
                         cell_names,
                     )
+                except Exception as e:
+                    st.error(f"An error occurred: {e}")
+                    return
+            st.success("Processing completed!")
+
+    elif option == "Collect Result Folders":
+        st.subheader("Collect Result Folders")
+
+        # Collecting user inputs
+        cohort_files_input = st.text_area(
+            "Enter the cohort files paths (comma-separated):"
+        )
+        cohort_files = [file.strip() for file in cohort_files_input.split(",")]
+
+        save_dir = st.text_input("Enter the save directory path:")
+
+        # Button to submit and run the processing
+        if st.button("Process Files"):
+
+            # if the save_dir does not exist, create it
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            else:
+                st.warning(
+                    "The save directory already exists. Existing files will be overwritten."
+                )
+                shutil.rmtree(save_dir)
+                os.makedirs(save_dir)
+
+            with st.spinner("Processing... see console for details"):
+
+                try:
+                    collect_result_folders(cohort_files, save_dir)
                 except Exception as e:
                     st.error(f"An error occurred: {e}")
                     return
