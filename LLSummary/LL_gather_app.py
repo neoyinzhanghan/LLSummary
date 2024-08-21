@@ -15,6 +15,7 @@ def main():
         "Select the action you want to perform:",
         options=[
             "Sample Cells by Classes",
+            "Collect Result Folders",
         ],
     )
 
