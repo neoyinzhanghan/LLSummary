@@ -116,18 +116,27 @@ def main():
 
         save_dir = st.text_input("Enter the save directory path:")
 
+        overwrite_if_save_dir_exists = st.checkbox(
+            "Overwrite existing files if the save directory already exists?"
+        )
+
         # Button to submit and run the processing
         if st.button("Process Files"):
 
             # if the save_dir does not exist, create it
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
-            else:
+            elif overwrite_if_save_dir_exists:
                 st.warning(
                     "The save directory already exists. Existing files will be overwritten."
                 )
                 shutil.rmtree(save_dir)
                 os.makedirs(save_dir)
+            else:
+                st.error(
+                    "The save directory already exists. Please choose a different save directory, or set the checkbox to overwrite existing files."
+                )
+                return
 
             with st.spinner("Processing... see console for details"):
 
