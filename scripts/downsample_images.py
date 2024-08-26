@@ -4,7 +4,7 @@ from PIL import Image
 from tqdm import tqdm
 
 image_folder = "/media/hdd3/riya/bma_slides/annotated_slides/predicted"
-downsampled_folder = "/media/hdd3/riya/bma_slides/annotated_slides/predicted"
+downsampled_folder = "/media/hdd3/riya/bma_slides/annotated_slides/predicted_downsampled"
 downsample_factor = 3
 
 metadata = {
